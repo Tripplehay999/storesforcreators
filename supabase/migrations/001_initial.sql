@@ -1,4 +1,4 @@
--- Browne's Talent Group — initial schema
+-- Stores for Creators — initial schema
 -- Run in the Supabase SQL editor (or `supabase db push`).
 
 create extension if not exists pgcrypto;

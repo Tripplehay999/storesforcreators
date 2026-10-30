@@ -26,7 +26,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           <div>
             <small>CREATOR STOREFRONT</small>
             <strong>Your brand. Your world.</strong>
-            <span>Powered by BTG ✳</span>
+            <span>Powered by SFC ✳</span>
           </div>
         </div>
 
@@ -34,7 +34,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       </aside>
 
       <section className="auth-main">
-        <Link className="back-link auth-back" href="/">← Back to Browne&apos;s Talent Group</Link>
+        <Link className="back-link auth-back" href="/">← Back to Stores for Creators</Link>
         <div className="auth-card">{children}</div>
       </section>
     </main>

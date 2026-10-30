@@ -9,7 +9,7 @@ const faqs = [
   ["Do I have to pay to get started?", "Our standard partnership has no upfront store setup fee. Revenue share and any optional services are agreed before launch."],
   ["Do I have to make the products myself?", "No. We can source and prepare appropriately licensed digital products. You can also discuss products you already own."],
   ["Will my store match my personal brand?", "Yes. Your storefront is customized around your identity, style, audience, and product collection."],
-  ["What does Browne's Talent Group handle?", "We handle store design, setup, ordinary checkout operations, digital delivery, and agreed ongoing administration."],
+  ["What does Stores for Creators handle?", "We handle store design, setup, ordinary checkout operations, digital delivery, and agreed ongoing administration."],
   ["Can I negotiate a better revenue split?", "Yes. The 50/50 example is not a universal requirement. The split can be negotiated in the creator's favour depending on the audience and partnership."],
   ["How much could I earn?", "Earnings depend on real traffic, conversion, pricing, refunds, and other factors. The calculator uses hypothetical assumptions, not guaranteed or typical results."],
   ["Do I need to promote my store?", "Yes. Creator promotion is part of the partnership. You introduce relevant products to your audience and disclose the commercial relationship where required."]
@@ -98,7 +98,7 @@ export default async function HomePage() {
                 <div>
                   <small>CREATOR STOREFRONT</small>
                   <strong>Jasmine&apos;s Financials</strong>
-                  <span>Powered by BTG ✳</span>
+                  <span>Powered by SFC ✳</span>
                 </div>
               </div>
 
@@ -225,7 +225,7 @@ export default async function HomePage() {
             <CreatorGrid stores={exampleStores} products={products} />
 
             <div className="collection-bottom">
-              <p>✳ Fictional creator concepts for illustration only. Photos do not represent actual BTG partners.</p>
+              <p>✳ Fictional creator concepts for illustration only. Photos do not represent actual SFC partners.</p>
               <Link href="/dashboard/products">Explore product customization ↗</Link>
             </div>
 
@@ -261,7 +261,7 @@ export default async function HomePage() {
                   Our agreed share is intended to cover ordinary store operating
                   costs, including payment processing, platform operations,
                   digital delivery, and store management. You don&apos;t receive a
-                  separate BTG platform-fee invoice for those standard services.
+                  separate SFC platform-fee invoice for those standard services.
                   The calculation of eligible sales receipts, refunds, taxes,
                   exceptional costs, and payout terms is defined in your agreement.
                 </p>
@@ -433,7 +433,7 @@ export default async function HomePage() {
               A business team handling the behind-the-scenes details.
             </p>
 
-            <button className="btn btn-lime" data-apply>Become a BTG creator ↗</button>
+            <button className="btn btn-lime" data-apply>Become a SFC creator ↗</button>
 
             <small>✳ NO UPFRONT STORE SETUP FEE</small>
           </div>

@@ -202,7 +202,7 @@ export default function Studio({ initialProducts, stores, initialId, ownStore, u
     const link = document.createElement("a");
 
     link.href = url;
-    link.download = "btg-products.json";
+    link.download = "sfc-products.json";
     link.click();
 
     setTimeout(() => URL.revokeObjectURL(url), 1000);

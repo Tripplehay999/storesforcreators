@@ -3,7 +3,7 @@ import Link from "next/link";
 import AuthForm from "@/components/AuthForm";
 import { signIn } from "../actions";
 
-export const metadata: Metadata = { title: "Creator login | Browne's Talent Group" };
+export const metadata: Metadata = { title: "Creator login | Stores for Creators" };
 
 type Props = { searchParams: Promise<{ next?: string; error?: string }> };
 

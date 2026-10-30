@@ -43,7 +43,7 @@ export default function Calculator() {
   const orders = Math.round(visits * values.rate / 100);
   const gross = orders * values.price;
   const creatorCut = gross * split;
-  const btgCut = gross * (1 - split);
+  const sfcCut = gross * (1 - split);
 
   const scenarios = [
     { key: "low", label: "LOWER", factor: 0.6 },
@@ -144,8 +144,8 @@ export default function Calculator() {
             <strong>{money(gross, 2)}</strong>
           </div>
           <div>
-            <small>BTG SHARE</small>
-            <strong>{money(btgCut, 2)}</strong>
+            <small>SFC SHARE</small>
+            <strong>{money(sfcCut, 2)}</strong>
           </div>
         </div>
 

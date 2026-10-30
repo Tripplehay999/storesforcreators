@@ -131,15 +131,15 @@ export default function UIRoot({ signedIn }: { signedIn: boolean }) {
       }
     };
 
-    window.addEventListener("btg:toast", onToast);
-    window.addEventListener("btg:info", onInfo);
+    window.addEventListener("sfc:toast", onToast);
+    window.addEventListener("sfc:info", onInfo);
     document.addEventListener("click", onClick);
     document.addEventListener("error", onImageError, true);
 
     return () => {
       clearTimeout(timer);
-      window.removeEventListener("btg:toast", onToast);
-      window.removeEventListener("btg:info", onInfo);
+      window.removeEventListener("sfc:toast", onToast);
+      window.removeEventListener("sfc:info", onInfo);
       document.removeEventListener("click", onClick);
       document.removeEventListener("error", onImageError, true);
     };
@@ -180,7 +180,7 @@ export default function UIRoot({ signedIn }: { signedIn: boolean }) {
       const link = document.createElement("a");
 
       link.href = url;
-      link.download = "btg-creator-application.txt";
+      link.download = "sfc-creator-application.txt";
       link.click();
 
       setTimeout(() => URL.revokeObjectURL(url), 1000);
@@ -194,7 +194,7 @@ export default function UIRoot({ signedIn }: { signedIn: boolean }) {
         <button className="modal-close" data-close aria-label="Close">×</button>
 
         <div className="modal-heading">
-          <span className="eyebrow">BECOME A BTG CREATOR</span>
+          <span className="eyebrow">BECOME A SFC CREATOR</span>
           <h2>Let&apos;s build<br /><em>your next thing.</em></h2>
           <p>Tell us a little about yourself and your audience.</p>
         </div>

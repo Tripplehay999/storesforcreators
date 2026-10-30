@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import AuthForm from "@/components/AuthForm";
 import { updatePassword } from "../actions";
 
-export const metadata: Metadata = { title: "Choose a new password | Browne's Talent Group" };
+export const metadata: Metadata = { title: "Choose a new password | Stores for Creators" };
 
 export default function ResetPasswordPage() {
   return (

@@ -1,4 +1,4 @@
-# Browne's Talent Group
+# Stores for Creators
 
 Creator commerce site — Next.js 16 (App Router) + Supabase (auth, Postgres, storage).
 

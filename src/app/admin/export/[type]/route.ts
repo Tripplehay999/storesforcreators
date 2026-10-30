@@ -82,7 +82,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ typ
   return new NextResponse(toCsv(rows), {
     headers: {
       "Content-Type": "text/csv; charset=utf-8",
-      "Content-Disposition": `attachment; filename="btg-${type}-${date}.csv"`
+      "Content-Disposition": `attachment; filename="sfc-${type}-${date}.csv"`
     }
   });
 }

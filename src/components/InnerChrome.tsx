@@ -5,7 +5,7 @@ export function DemoRibbon() {
   return (
     <div className="demo-ribbon">
       <span>✳ STOREFRONT DESIGN PREVIEW — NOT A LIVE CHECKOUT</span>
-      <Link href="/">← Back to Browne&apos;s Talent Group</Link>
+      <Link href="/">← Back to Stores for Creators</Link>
     </div>
   );
 }

@@ -25,7 +25,7 @@ export default function SiteFooter() {
       </div>
 
       <div className="container footer-bottom">
-        <span>© {new Date().getFullYear()} Browne&apos;s Talent Group.</span>
+        <span>© {new Date().getFullYear()} Stores for Creators.</span>
         <span>Illustrative creator profiles, earnings, and products are clearly identified throughout.</span>
         <button data-policy>Privacy &amp; terms</button>
       </div>

@@ -1,4 +1,4 @@
--- Browne's Talent Group — admin control panel: payouts, balances, admin RPCs
+-- Stores for Creators — admin control panel: payouts, balances, admin RPCs
 -- Run after 001_initial.sql.
 
 -- ─────────────────────────────────────────────────────────────

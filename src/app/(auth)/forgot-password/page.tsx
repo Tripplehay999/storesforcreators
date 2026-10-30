@@ -3,7 +3,7 @@ import Link from "next/link";
 import AuthForm from "@/components/AuthForm";
 import { requestPasswordReset } from "../actions";
 
-export const metadata: Metadata = { title: "Reset your password | Browne's Talent Group" };
+export const metadata: Metadata = { title: "Reset your password | Stores for Creators" };
 
 export default function ForgotPasswordPage() {
   return (

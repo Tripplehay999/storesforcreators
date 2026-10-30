@@ -4,7 +4,7 @@ import HubNav from "@/components/HubNav";
 import ModeSwitch from "@/components/ModeSwitch";
 import { requireSession } from "@/lib/data";
 
-export const metadata: Metadata = { title: "Creator hub | Browne's Talent Group" };
+export const metadata: Metadata = { title: "Creator hub | Stores for Creators" };
 
 // Always per-user; never prerender (even when built without Supabase keys).
 export const dynamic = "force-dynamic";
@@ -16,7 +16,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   return (
     <div className="hub">
       <div className="dash-top hub-ribbon">
-        <span>✳ {store ? store.name.toUpperCase() : "BROWNE'S TALENT GROUP"} · CREATOR HUB</span>
+        <span>✳ {store ? store.name.toUpperCase() : "STORES FOR CREATORS"} · CREATOR HUB</span>
         {profile.role === "admin" && <span className="sample-badge">ADMIN ACCOUNT</span>}
       </div>
 

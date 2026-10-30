@@ -24,9 +24,9 @@ const manrope = Manrope({
 });
 
 export const metadata: Metadata = {
-  title: "Browne's Talent Group | Your Audience. Our Expertise.",
+  title: "Stores for Creators | Your Audience. Our Expertise.",
   description:
-    "Browne's Talent Group creates and operates beautifully branded digital storefronts for creators. Your audience. Our expertise."
+    "Stores for Creators creates and operates beautifully branded digital storefronts for creators. Your audience. Our expertise."
 };
 
 export const viewport: Viewport = {

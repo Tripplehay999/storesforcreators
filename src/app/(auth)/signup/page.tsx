@@ -3,13 +3,13 @@ import Link from "next/link";
 import AuthForm from "@/components/AuthForm";
 import { signUp } from "../actions";
 
-export const metadata: Metadata = { title: "Create your creator account | Browne's Talent Group" };
+export const metadata: Metadata = { title: "Create your creator account | Stores for Creators" };
 
 export default function SignupPage() {
   return (
     <>
       <div className="modal-heading">
-        <span className="eyebrow">BECOME A BTG CREATOR</span>
+        <span className="eyebrow">BECOME A SFC CREATOR</span>
         <h2>Let&apos;s build<br /><em>your next thing.</em></h2>
         <p>Create your account to set up your storefront and track your earnings.</p>
       </div>

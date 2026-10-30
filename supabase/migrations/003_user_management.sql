@@ -1,4 +1,4 @@
--- Browne's Talent Group — user management: suspension, balance adjustments, admin notes
+-- Stores for Creators — user management: suspension, balance adjustments, admin notes
 -- Run after 002_admin_panel.sql.
 
 -- ─────────────────────────────────────────────────────────────

@@ -5,7 +5,7 @@ import { getCounts } from "@/lib/admin-data";
 import { requireAdmin } from "@/lib/data";
 import "./admin.css";
 
-export const metadata: Metadata = { title: "Admin · BTG Control" };
+export const metadata: Metadata = { title: "Admin · SFC Control" };
 export const dynamic = "force-dynamic";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -16,7 +16,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     <div className="adm">
       <aside className="adm-sidebar">
         <div className="adm-logo">
-          <span className="adm-logo-mark">BTG</span>
+          <span className="adm-logo-mark">SFC</span>
           <div>
             <strong>Control</strong>
             <small>Admin panel</small>
