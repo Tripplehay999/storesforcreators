@@ -116,18 +116,9 @@ export async function getViewedStore(session: Session, slug?: string): Promise<S
   return session.store;
 }
 
-export async function getOrders(storeSlug: string, since: Date): Promise<Order[]> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("orders")
-    .select("*")
-    .eq("store_slug", storeSlug)
-    .gte("created_at", since.toISOString())
-    .order("created_at", { ascending: false });
-
-  if (error) throw error;
-
-  return data.map(row => ({
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function rowToOrder(row: any): Order {
+  return {
     id: row.id,
     storeSlug: row.store_slug,
     productId: row.product_id,
@@ -136,7 +127,48 @@ export async function getOrders(storeSlug: string, since: Date): Promise<Order[]
     creatorAmount: Number(row.creator_amount),
     status: row.status,
     createdAt: row.created_at
-  }));
+  };
+}
+
+/** Every order for a store since `since` (all time when omitted), newest first. */
+export async function getOrders(storeSlug: string, since?: Date): Promise<Order[]> {
+  const supabase = await createClient();
+  let query = supabase
+    .from("orders")
+    .select("*")
+    .eq("store_slug", storeSlug)
+    .order("created_at", { ascending: false });
+
+  if (since) query = query.gte("created_at", since.toISOString());
+
+  const { data, error } = await query;
+
+  if (error) throw error;
+  return data.map(rowToOrder);
+}
+
+/** One page of a store's orders, newest first, with the total matching count. */
+export async function getOrderPage(
+  storeSlug: string,
+  { status, page, pageSize }: { status?: Order["status"]; page: number; pageSize: number }
+): Promise<{ orders: Order[]; total: number }> {
+  const supabase = await createClient();
+  const from = (page - 1) * pageSize;
+  let query = supabase
+    .from("orders")
+    .select("*", { count: "exact" })
+    .eq("store_slug", storeSlug)
+    .order("created_at", { ascending: false })
+    .range(from, from + pageSize - 1);
+
+  if (status) query = query.eq("status", status);
+
+  const { data, error, count } = await query;
+
+  // PostgREST rejects a page past the end; treat it as empty.
+  if (error?.code === "PGRST103") return { orders: [], total: 0 };
+  if (error) throw error;
+  return { orders: data.map(rowToOrder), total: count ?? 0 };
 }
 
 export async function getApplications(): Promise<Application[]> {

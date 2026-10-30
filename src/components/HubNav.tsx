@@ -8,6 +8,7 @@ export default function HubNav({ storeSlug }: { storeSlug: string | null }) {
 
   const links = [
     ["/dashboard", "Overview"],
+    ["/dashboard/earnings", "Earnings"],
     ["/dashboard/store", "My store"],
     ["/dashboard/products", "Products"]
   ];

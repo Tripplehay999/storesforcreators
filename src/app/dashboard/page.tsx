@@ -122,6 +122,7 @@ export default async function DashboardPage({ searchParams }: Props) {
   ]);
 
   const data = summarize(orders, adjustments, period, now);
+  const earningsHref = `/dashboard/earnings${isOwnStore ? "" : `?store=${store.slug}`}`;
   const totalOrders = data.orders.reduce((sum, value) => sum + value, 0);
   const query = (next: Record<string, string>) =>
     "?" + new URLSearchParams({ ...(isOwnStore ? {} : { store: store.slug }), period, ...next }).toString();
@@ -223,7 +224,7 @@ export default async function DashboardPage({ searchParams }: Props) {
           <section className="editor-panel">
             <div className="preview-heading">
               <h2>Recent orders</h2>
-              <span className="eyebrow">{orders.length} IN LAST 4 MONTHS</span>
+              <Link className="small-button" href={earningsHref}>All orders ↗</Link>
             </div>
 
             {orders.length === 0 ? (
@@ -274,7 +275,7 @@ export default async function DashboardPage({ searchParams }: Props) {
           <section className="editor-panel">
             <div className="preview-heading">
               <h2>Payouts</h2>
-              <span className="eyebrow">{money(balance?.balance ?? 0, 2)} AVAILABLE</span>
+              <Link className="small-button" href={earningsHref}>History ↗</Link>
             </div>
 
             <p className="hub-empty">

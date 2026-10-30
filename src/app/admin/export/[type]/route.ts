@@ -1,22 +1,7 @@
 import { NextResponse } from "next/server";
 import { getAllOrders, getPayouts, getStoreBalances, getUsers } from "@/lib/admin-data";
+import { csvResponse, type CsvRow } from "@/lib/csv";
 import { getSession } from "@/lib/data";
-
-type Row = Record<string, string | number | boolean | null>;
-
-function toCsv(rows: Row[]) {
-  if (rows.length === 0) return "";
-
-  const headers = Object.keys(rows[0]);
-  const cell = (value: Row[string]) => {
-    const text = value === null ? "" : String(value);
-    // Quote everything; neutralise spreadsheet formula injection.
-    const safe = /^[=+\-@]/.test(text) ? `'${text}` : text;
-    return `"${safe.replace(/"/g, '""')}"`;
-  };
-
-  return [headers.join(","), ...rows.map(row => headers.map(key => cell(row[key])).join(","))].join("\n");
-}
 
 export async function GET(_request: Request, { params }: { params: Promise<{ type: string }> }) {
   const session = await getSession();
@@ -26,7 +11,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ typ
   }
 
   const { type } = await params;
-  let rows: Row[];
+  let rows: CsvRow[];
 
   if (type === "users") {
     const [users, balances] = await Promise.all([getUsers(), getStoreBalances()]);
@@ -77,12 +62,5 @@ export async function GET(_request: Request, { params }: { params: Promise<{ typ
     return new NextResponse("Not found", { status: 404 });
   }
 
-  const date = new Date().toISOString().slice(0, 10);
-
-  return new NextResponse(toCsv(rows), {
-    headers: {
-      "Content-Type": "text/csv; charset=utf-8",
-      "Content-Disposition": `attachment; filename="sfc-${type}-${date}.csv"`
-    }
-  });
+  return csvResponse(type, rows);
 }
