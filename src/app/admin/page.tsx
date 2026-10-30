@@ -1,13 +1,17 @@
 import Link from "next/link";
 import { getAllOrders, getCounts, getOrdersSince, getStoreBalances } from "@/lib/admin-data";
-import { money, number, shortDate } from "@/lib/format";
+import { calendarDay, money, number, shortDate, zonedDate } from "@/lib/format";
 
 const DAYS = 30;
 
 export default async function AdminOverviewPage() {
-  const since = new Date();
-  since.setHours(0, 0, 0, 0);
-  since.setDate(since.getDate() - (DAYS - 1));
+  const today = zonedDate(new Date());
+  const days = Array.from({ length: DAYS }, (_, index) => ({
+    day: calendarDay(today.year, today.month, today.day - (DAYS - 1) + index),
+    gross: 0
+  }));
+  // A day early, so evening orders on the first day in TIME_ZONE are included.
+  const since = new Date(days[0].day.getTime() - 86400000);
 
   const [balances, counts, recentOrders, windowOrders] = await Promise.all([
     getStoreBalances(),
@@ -29,14 +33,10 @@ export default async function AdminOverviewPage() {
   );
 
   const completed = windowOrders.filter(order => order.status === "completed");
-  const days = Array.from({ length: DAYS }, (_, index) => {
-    const day = new Date(since);
-    day.setDate(since.getDate() + index);
-    return { day, gross: 0 };
-  });
 
   completed.forEach(order => {
-    const index = Math.floor((new Date(order.createdAt).getTime() - since.getTime()) / 86400000);
+    const { year, month, day } = zonedDate(order.createdAt);
+    const index = Math.round((calendarDay(year, month, day).getTime() - days[0].day.getTime()) / 86400000);
     if (days[index]) days[index].gross += order.amount;
   });
 
@@ -66,7 +66,7 @@ export default async function AdminOverviewPage() {
           <span>{number(totals.orders)} completed orders</span>
         </div>
         <div className="adm-kpi">
-          <small>BTG revenue</small>
+          <small>SFC revenue</small>
           <strong>{money(totals.gross - totals.earned, 2)}</strong>
           <span>Gross minus creator shares</span>
         </div>

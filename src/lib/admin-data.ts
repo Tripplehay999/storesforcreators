@@ -112,6 +112,14 @@ export async function getStoreBalances(): Promise<StoreBalance[]> {
   return data.map(rowToBalance);
 }
 
+export async function getStoreBalance(slug: string): Promise<StoreBalance | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("store_balances").select("*").eq("slug", slug).maybeSingle();
+
+  if (error) throw error;
+  return data ? rowToBalance(data) : null;
+}
+
 export async function getUsers(search?: string): Promise<AdminUser[]> {
   const supabase = await createClient();
   let query = supabase

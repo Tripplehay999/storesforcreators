@@ -1,8 +1,8 @@
 import Link from "next/link";
 import OrderBars from "@/components/OrderBars";
-import { getAdjustments, getPayouts, getStoreBalances, type Adjustment } from "@/lib/admin-data";
+import { getAdjustments, getPayouts, getStoreBalance, type Adjustment } from "@/lib/admin-data";
 import { getOrders, getProducts, getViewedStore, requireSession } from "@/lib/data";
-import { money, number, shortDate } from "@/lib/format";
+import { calendarDay, money, number, shortDate, zonedDate } from "@/lib/format";
 import type { Order } from "@/lib/types";
 
 type Props = {
@@ -14,8 +14,7 @@ const MONTHS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "
 // Earnings for the period = creator share of completed orders + manual credits/deductions.
 function summarize(orders: Order[], adjustments: Adjustment[], period: "weeks" | "months", now: Date) {
   const completed = orders.filter(order => order.status === "completed");
-  const year = now.getFullYear();
-  const month = now.getMonth();
+  const { year, month } = zonedDate(now);
 
   if (period === "weeks") {
     const days = new Date(year, month + 1, 0).getDate();
@@ -23,17 +22,17 @@ function summarize(orders: Order[], adjustments: Adjustment[], period: "weeks" |
     let earnings = 0;
 
     completed.forEach(order => {
-      const date = new Date(order.createdAt);
+      const date = zonedDate(order.createdAt);
 
-      if (date.getFullYear() === year && date.getMonth() === month) {
-        counts[Math.floor((date.getDate() - 1) / 7)] += 1;
+      if (date.year === year && date.month === month) {
+        counts[Math.floor((date.day - 1) / 7)] += 1;
         earnings += order.creatorAmount;
       }
     });
 
     adjustments.forEach(adjustment => {
-      const date = new Date(adjustment.createdAt);
-      if (date.getFullYear() === year && date.getMonth() === month) earnings += adjustment.amount;
+      const date = zonedDate(adjustment.createdAt);
+      if (date.year === year && date.month === month) earnings += adjustment.amount;
     });
 
     return {
@@ -49,8 +48,8 @@ function summarize(orders: Order[], adjustments: Adjustment[], period: "weeks" |
   let earnings = 0;
 
   completed.forEach(order => {
-    const date = new Date(order.createdAt);
-    const index = 3 - ((year - date.getFullYear()) * 12 + month - date.getMonth());
+    const date = zonedDate(order.createdAt);
+    const index = 3 - ((year - date.year) * 12 + month - date.month);
 
     if (index >= 0 && index <= 3) {
       counts[index] += 1;
@@ -59,8 +58,8 @@ function summarize(orders: Order[], adjustments: Adjustment[], period: "weeks" |
   });
 
   adjustments.forEach(adjustment => {
-    const date = new Date(adjustment.createdAt);
-    const index = 3 - ((year - date.getFullYear()) * 12 + month - date.getMonth());
+    const date = zonedDate(adjustment.createdAt);
+    const index = 3 - ((year - date.year) * 12 + month - date.month);
     if (index >= 0 && index <= 3) earnings += adjustment.amount;
   });
 
@@ -112,14 +111,15 @@ export default async function DashboardPage({ searchParams }: Props) {
   }
 
   const now = new Date();
-  const [orders, products, payouts, balances, adjustments] = await Promise.all([
-    getOrders(store.slug, new Date(now.getFullYear(), now.getMonth() - 3, 1)),
+  const today = zonedDate(now);
+  const [orders, products, payouts, balance, adjustments] = await Promise.all([
+    // A day early, so orders from the first evening of the window in TIME_ZONE are included.
+    getOrders(store.slug, calendarDay(today.year, today.month - 3, 0)),
     getProducts(store.slug),
     getPayouts({ store: store.slug }),
-    getStoreBalances(),
+    getStoreBalance(store.slug),
     getAdjustments(store.slug)
   ]);
-  const balance = balances.find(item => item.slug === store.slug);
 
   const data = summarize(orders, adjustments, period, now);
   const totalOrders = data.orders.reduce((sum, value) => sum + value, 0);
@@ -181,7 +181,7 @@ export default async function DashboardPage({ searchParams }: Props) {
 
             <div className="dash-balance">
               <small>AVAILABLE BALANCE $</small>
-              <strong>{money(Math.max(0, balance?.balance ?? 0), 2)}</strong>
+              <strong>{money(balance?.balance ?? 0, 2)}</strong>
               <span>
                 {money(balance?.paidOut ?? 0, 2)} paid out
                 {(balance?.pendingPayouts ?? 0) > 0 && ` · ${money(balance!.pendingPayouts, 2)} pending`}
@@ -223,7 +223,7 @@ export default async function DashboardPage({ searchParams }: Props) {
           <section className="editor-panel">
             <div className="preview-heading">
               <h2>Recent orders</h2>
-              <span className="eyebrow">{orders.length} TOTAL</span>
+              <span className="eyebrow">{orders.length} IN LAST 4 MONTHS</span>
             </div>
 
             {orders.length === 0 ? (
@@ -235,7 +235,7 @@ export default async function DashboardPage({ searchParams }: Props) {
                     <div>
                       <strong>{order.productName}</strong>
                       <small>
-                        {new Date(order.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                        {shortDate(order.createdAt)}
                         {order.status === "refunded" && " · REFUNDED"}
                       </small>
                     </div>
@@ -274,7 +274,7 @@ export default async function DashboardPage({ searchParams }: Props) {
           <section className="editor-panel">
             <div className="preview-heading">
               <h2>Payouts</h2>
-              <span className="eyebrow">{money(Math.max(0, balance?.balance ?? 0), 2)} AVAILABLE</span>
+              <span className="eyebrow">{money(balance?.balance ?? 0, 2)} AVAILABLE</span>
             </div>
 
             <p className="hub-empty">

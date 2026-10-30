@@ -3,7 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { getStoreBalance } from "@/lib/admin-data";
 import { requireAdmin } from "@/lib/data";
+import { money } from "@/lib/format";
 import { createServiceClient, hasServiceRole } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
@@ -164,6 +166,17 @@ export async function deleteOrder(_prev: AdminState, formData: FormData): Promis
 
 // ── Payouts ──────────────────────────────────────────────────
 
+/** An error message if paying `amount` would take the store's balance below zero. */
+async function exceedsBalance(slug: string, amount: number) {
+  const balance = await getStoreBalance(slug);
+
+  if (!balance) return "Choose a store.";
+  if (amount > balance.balance + 0.005) {
+    return `That's more than ${balance.name}'s available balance of ${money(balance.balance, 2)}.`;
+  }
+  return null;
+}
+
 export async function createPayout(_prev: AdminState, formData: FormData): Promise<AdminState> {
   await requireAdmin();
 
@@ -173,9 +186,13 @@ export async function createPayout(_prev: AdminState, formData: FormData): Promi
 
   const supabase = await createClient();
   const markPaid = formData.get("paid") === "on";
+  const store = text(formData, "store", 40);
+  const overdraw = await exceedsBalance(store, amount);
+
+  if (overdraw) return { error: overdraw };
 
   const { error } = await supabase.from("payouts").insert({
-    store_slug: text(formData, "store", 40),
+    store_slug: store,
     amount,
     method: text(formData, "method", 60),
     reference: text(formData, "reference"),
@@ -197,14 +214,30 @@ export async function setPayoutStatus(_prev: AdminState, formData: FormData): Pr
   if (!["pending", "paid", "cancelled"].includes(status)) return { error: "Unknown status." };
 
   const supabase = await createClient();
+  const id = text(formData, "id");
+  const { data: current } = await supabase
+    .from("payouts")
+    .select("store_slug, amount, status, paid_at")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (!current) return { error: "That payout no longer exists." };
+
+  // Reopening a cancelled payout commits the money again.
+  if (current.status === "cancelled" && status !== "cancelled") {
+    const overdraw = await exceedsBalance(current.store_slug, Number(current.amount));
+    if (overdraw) return { error: overdraw };
+  }
+
   const { error } = await supabase
     .from("payouts")
     .update({
       status,
-      paid_at: status === "paid" ? new Date().toISOString() : null,
+      // Keep the original paid date if it was already paid.
+      paid_at: status === "paid" ? (current.paid_at ?? new Date().toISOString()) : null,
       ...(formData.has("reference") ? { reference: text(formData, "reference") } : {})
     })
-    .eq("id", text(formData, "id"));
+    .eq("id", id);
 
   if (error) return { error: "Couldn't update that payout." };
 
