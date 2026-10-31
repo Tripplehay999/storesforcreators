@@ -9,7 +9,8 @@ import "@/app/dashboard/hub.css";
 export default function HubShell({ profile, store, children }: { profile: Profile; store: Store | null; children: React.ReactNode }) {
   const name = profile.fullName || "Creator";
   const initial = (profile.fullName || profile.email).trim().charAt(0).toUpperCase();
-  const isAdmin = profile.role === "admin";
+  // Only active admins see the way into the admin panel.
+  const isAdmin = profile.role === "admin" && !profile.suspended;
 
   const account = (
     <>
