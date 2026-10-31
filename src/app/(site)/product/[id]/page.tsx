@@ -48,7 +48,7 @@ export default async function ProductPage({ params, searchParams }: Props) {
 
             <p>{product.description}</p>
 
-            <button className="btn btn-dark" data-buy>{product.cta} ↗</button>
+            <button className="btn btn-dark" data-buy>{product.cta}</button>
 
             <p className="product-note">Storefront demonstration — checkout is not connected.</p>
 
@@ -67,7 +67,7 @@ export default async function ProductPage({ params, searchParams }: Props) {
             </div>
 
             <Link className="back-link" href={`/dashboard/products?product=${encodeURIComponent(product.id)}`}>
-              Customize this product design ↗
+              Customize this product design
             </Link>
           </div>
         </div>

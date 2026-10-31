@@ -9,14 +9,13 @@ export default function SignupPage() {
   return (
     <>
       <div className="modal-heading">
-        <span className="eyebrow">BECOME A SFC CREATOR</span>
-        <h2>Let&apos;s build<br /><em>your next thing.</em></h2>
-        <p>Create your account to set up your storefront and track your earnings.</p>
+        <h2>Create your account</h2>
+        <p>Set up your storefront and track your earnings in one place.</p>
       </div>
 
       <AuthForm
         action={signUp}
-        submitLabel="Create my account ↗"
+        submitLabel="Create account"
         pendingLabel="Creating your account…"
         fields={[
           { name: "full_name", label: "Your name", placeholder: "Your full name", autoComplete: "name" },
@@ -26,7 +25,7 @@ export default function SignupPage() {
         ]}
         footer={
           <div className="auth-links">
-            <span>Already a creator? <Link href="/login">Log in ↗</Link></span>
+            <span>Already have an account? <Link href="/login">Log in</Link></span>
           </div>
         }
       />

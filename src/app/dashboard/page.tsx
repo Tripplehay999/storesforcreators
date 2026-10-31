@@ -1,304 +1,87 @@
 import Link from "next/link";
-import OrderBars from "@/components/OrderBars";
-import { getAdjustments, getPayouts, getStoreBalance, type Adjustment } from "@/lib/admin-data";
-import { getOrders, getProducts, getViewedStore, requireSession } from "@/lib/data";
-import { calendarDay, money, number, shortDate, zonedDate } from "@/lib/format";
-import type { Order } from "@/lib/types";
+import Icon from "@/components/hub/Icon";
+import OverviewView from "@/components/hub/OverviewView";
+import { getStoreBalance } from "@/lib/admin-data";
+import { getOrderPage, getOrders, getProducts, getViewedStore, requireSession } from "@/lib/data";
+import { parseRange, rangeStart, summarize } from "@/lib/stats";
 
 type Props = {
-  searchParams: Promise<{ period?: string; store?: string; notice?: string }>;
+  searchParams: Promise<{ range?: string; store?: string; notice?: string }>;
 };
 
-const MONTHS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
-
-// Earnings for the period = creator share of completed orders + manual credits/deductions.
-function summarize(orders: Order[], adjustments: Adjustment[], period: "weeks" | "months", now: Date) {
-  const completed = orders.filter(order => order.status === "completed");
-  const { year, month } = zonedDate(now);
-
-  if (period === "weeks") {
-    const days = new Date(year, month + 1, 0).getDate();
-    const counts = Array<number>(Math.ceil(days / 7)).fill(0);
-    let earnings = 0;
-
-    completed.forEach(order => {
-      const date = zonedDate(order.createdAt);
-
-      if (date.year === year && date.month === month) {
-        counts[Math.floor((date.day - 1) / 7)] += 1;
-        earnings += order.creatorAmount;
-      }
-    });
-
-    adjustments.forEach(adjustment => {
-      const date = zonedDate(adjustment.createdAt);
-      if (date.year === year && date.month === month) earnings += adjustment.amount;
-    });
-
-    return {
-      labels: counts.map((_, index) => `W${index + 1}`),
-      orders: counts,
-      earnings,
-      title: "Weekly orders",
-      note: `${MONTHS[month]} ${year} · BY WEEK`
-    };
-  }
-
-  const counts = [0, 0, 0, 0];
-  let earnings = 0;
-
-  completed.forEach(order => {
-    const date = zonedDate(order.createdAt);
-    const index = 3 - ((year - date.year) * 12 + month - date.month);
-
-    if (index >= 0 && index <= 3) {
-      counts[index] += 1;
-      earnings += order.creatorAmount;
-    }
-  });
-
-  adjustments.forEach(adjustment => {
-    const date = zonedDate(adjustment.createdAt);
-    const index = 3 - ((year - date.year) * 12 + month - date.month);
-    if (index >= 0 && index <= 3) earnings += adjustment.amount;
-  });
-
-  return {
-    labels: counts.map((_, index) => MONTHS[(month - 3 + index + 12) % 12]),
-    orders: counts,
-    earnings,
-    title: "Monthly orders",
-    note: "LAST 4 MONTHS"
-  };
-}
+const NOTICES: Record<string, string> = {
+  welcome: "Welcome to Stores for Creators! Start by setting up your store.",
+  "password-updated": "Your password has been updated."
+};
 
 export default async function DashboardPage({ searchParams }: Props) {
   const session = await requireSession();
   const params = await searchParams;
-  const firstName = session.profile.fullName.split(" ")[0] || "creator";
-  const period = params.period === "months" ? "months" : "weeks";
-
+  const firstName = session.profile.fullName.split(" ")[0] || "there";
   const store = await getViewedStore(session, params.store);
-  const isOwnStore = store !== null && store.slug === session.store?.slug;
+  const notice = params.notice && NOTICES[params.notice];
 
   if (!store) {
     return (
-      <section className="hub-onboarding">
-        <span className="eyebrow">WELCOME TO YOUR CREATOR HUB</span>
-        <h1>Hi {firstName}, let&apos;s build <em>your store.</em></h1>
-        <p>Three steps between you and a beautifully branded storefront.</p>
+      <>
+        {notice && <div className="banner banner-pos"><Icon name="check" size={16} /><span>{notice}</span></div>}
 
-        <ol className="process-steps hub-steps">
-          {[
-            ["01", "Create your storefront.", "Pick your store URL, name, colours, and headline."],
-            ["02", "Add your products.", "Use the product studio to set up photos, pricing, features, and FAQs."],
-            ["03", "Share it with your community.", "Your orders and earnings will show up right here."]
-          ].map(([step, title, body]) => (
-            <li className="process-step" key={step}>
-              <span>{step}</span>
+        <section className="welcome">
+          <h1>Welcome, {firstName}</h1>
+          <p>Your store is three steps away. Most creators finish in under ten minutes.</p>
+
+          <ol className="welcome-steps">
+            <li>
+              <span className="welcome-num">1</span>
               <div>
-                <h3>{title}</h3>
-                <p>{body}</p>
+                <strong>Create your storefront</strong>
+                <p>Choose your store address, name, photo and colours.</p>
               </div>
-              <b>↗</b>
+              <Link className="btn btn-primary" href="/dashboard/store">Start</Link>
             </li>
-          ))}
-        </ol>
-
-        <Link className="btn btn-dark" href="/dashboard/store">Create my store ↗</Link>
-      </section>
+            <li className="is-locked">
+              <span className="welcome-num">2</span>
+              <div>
+                <strong>Add your products</strong>
+                <p>Set up photos, pricing, features and FAQs for each one.</p>
+              </div>
+            </li>
+            <li className="is-locked">
+              <span className="welcome-num">3</span>
+              <div>
+                <strong>Share it with your audience</strong>
+                <p>Orders and earnings appear here as soon as they come in.</p>
+              </div>
+            </li>
+          </ol>
+        </section>
+      </>
     );
   }
 
+  const range = parseRange(params.range);
   const now = new Date();
-  const today = zonedDate(now);
-  const [orders, products, payouts, balance, adjustments] = await Promise.all([
-    // A day early, so orders from the first evening of the window in TIME_ZONE are included.
-    getOrders(store.slug, calendarDay(today.year, today.month - 3, 0)),
+  const [orders, recent, products, balance] = await Promise.all([
+    getOrders(store.slug, rangeStart(range, now)),
+    getOrderPage(store.slug, { page: 1, pageSize: 6 }),
     getProducts(store.slug),
-    getPayouts({ store: store.slug }),
-    getStoreBalance(store.slug),
-    getAdjustments(store.slug)
+    getStoreBalance(store.slug)
   ]);
-
-  const data = summarize(orders, adjustments, period, now);
-  const earningsHref = `/dashboard/earnings${isOwnStore ? "" : `?store=${store.slug}`}`;
-  const totalOrders = data.orders.reduce((sum, value) => sum + value, 0);
-  const query = (next: Record<string, string>) =>
-    "?" + new URLSearchParams({ ...(isOwnStore ? {} : { store: store.slug }), period, ...next }).toString();
 
   return (
     <>
-      {!isOwnStore && (
-        <p className="hub-flash hub-flash-admin">
-          ✳ Viewing {store.name}&apos;s creator hub as an admin.{" "}
-          <Link href="/admin/stores">Back to admin panel →</Link>
-        </p>
-      )}
-
-      <div className="hub-heading">
-        <div>
-          <span className="eyebrow">{isOwnStore ? "YOUR STORE / OVERVIEW" : `${store.name.toUpperCase()} / OVERVIEW`}</span>
-          <h1>
-            {isOwnStore ? <>Welcome back, {firstName}. </> : <>{store.name}. </>}
-            <em>Your momentum.</em>
-          </h1>
-        </div>
-      </div>
-
-      {params.notice === "welcome" && (
-        <p className="hub-flash">✳ Welcome to your creator hub! Your application is in — start by setting up your store.</p>
-      )}
-
-      {params.notice === "password-updated" && (
-        <p className="hub-flash">✳ Your password has been updated.</p>
-      )}
-
-      <div className="hub-grid">
-        <div className="dashboard-mock">
-          <div className="dash-greeting">
-            <div>
-              <small>{store.name.toUpperCase()}</small>
-              <h3>Your money, <em>your momentum.</em></h3>
-              <p>Every order, every milestone, beautifully organized.</p>
-            </div>
-          </div>
-
-          <div className="dash-tabs">
-            <Link href={query({ period: "weeks" })} className={period === "weeks" ? "active" : ""}>
-              This month · by week
-            </Link>
-            <Link href={query({ period: "months" })} className={period === "months" ? "active" : ""}>
-              Last 4 months
-            </Link>
-          </div>
-
-          <div className="dash-metrics hub-metrics">
-            <div className="dash-earnings">
-              <small>YOUR CREATOR EARNINGS ✳</small>
-              <strong>{money(data.earnings, 2)}</strong>
-              <span>{period === "weeks" ? "This month" : "Last 4 months"} · your {store.revenueShare}% share</span>
-            </div>
-
-            <div className="dash-balance">
-              <small>AVAILABLE BALANCE $</small>
-              <strong>{money(balance?.balance ?? 0, 2)}</strong>
-              <span>
-                {money(balance?.paidOut ?? 0, 2)} paid out
-                {(balance?.pendingPayouts ?? 0) > 0 && ` · ${money(balance!.pendingPayouts, 2)} pending`}
-              </span>
-            </div>
-
-            <div className="dash-orders">
-              <small>PRODUCT ORDERS ↗</small>
-              <strong>{number(totalOrders)}</strong>
-              <span>Completed orders</span>
-            </div>
-          </div>
-
-          <div className="dash-chart">
-            <div className="dash-chart-heading">
-              <div>
-                <strong>{data.title}</strong>
-                <small>{data.note}</small>
-              </div>
-              <span>LIVE DATA</span>
-            </div>
-
-            <OrderBars labels={data.labels} orders={data.orders} />
-
-            <small className="dash-chart-caption">
-              {totalOrders === 0
-                ? "No orders yet in this period — share your store to get started."
-                : "Refunded orders are excluded."}
-            </small>
-          </div>
-
-          <div className="dash-footer">
-            <span>✳ /store/{store.slug}</span>
-            <span>CREATOR SHARE <strong>{store.revenueShare}%</strong></span>
-          </div>
-        </div>
-
-        <div className="hub-side">
-          <section className="editor-panel">
-            <div className="preview-heading">
-              <h2>Recent orders</h2>
-              <Link className="small-button" href={earningsHref}>All orders ↗</Link>
-            </div>
-
-            {orders.length === 0 ? (
-              <p className="hub-empty">No orders yet. When customers buy from your store, they&apos;ll appear here.</p>
-            ) : (
-              <ul className="hub-list">
-                {orders.slice(0, 6).map(order => (
-                  <li key={order.id}>
-                    <div>
-                      <strong>{order.productName}</strong>
-                      <small>
-                        {shortDate(order.createdAt)}
-                        {order.status === "refunded" && " · REFUNDED"}
-                      </small>
-                    </div>
-                    <span className={order.status === "refunded" ? "hub-refunded" : ""}>
-                      +{money(order.creatorAmount, 2)}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </section>
-
-          <section className="editor-panel">
-            <div className="preview-heading">
-              <h2>Your products</h2>
-              <Link className="small-button" href="/dashboard/products">Open studio ↗</Link>
-            </div>
-
-            {products.length === 0 ? (
-              <p className="hub-empty">No products yet. Add your first one in the product studio.</p>
-            ) : (
-              <ul className="hub-list">
-                {products.slice(0, 5).map(product => (
-                  <li key={product.id}>
-                    <div>
-                      <strong>{product.name}</strong>
-                      <small>{product.category}</small>
-                    </div>
-                    <Link href={`/dashboard/products?product=${product.id}`}>Edit ↗</Link>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </section>
-
-          <section className="editor-panel">
-            <div className="preview-heading">
-              <h2>Payouts</h2>
-              <Link className="small-button" href={earningsHref}>History ↗</Link>
-            </div>
-
-            <p className="hub-empty">
-              {money(balance?.paidOut ?? 0, 2)} paid to you so far
-              {(balance?.pendingPayouts ?? 0) > 0 && ` · ${money(balance!.pendingPayouts, 2)} on its way`}.
-            </p>
-
-            {payouts.length > 0 && (
-              <ul className="hub-list">
-                {payouts.filter(payout => payout.status !== "cancelled").slice(0, 4).map(payout => (
-                  <li key={payout.id}>
-                    <div>
-                      <strong>{payout.method || "Payout"}</strong>
-                      <small>{shortDate(payout.paidAt ?? payout.createdAt, true).toUpperCase()} · {payout.status.toUpperCase()}</small>
-                    </div>
-                    <span>{money(payout.amount, 2)}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </section>
-        </div>
-      </div>
+      {notice && <div className="banner banner-pos"><Icon name="check" size={16} /><span>{notice}</span></div>}
+      <OverviewView
+        store={store}
+        firstName={firstName}
+        isOwnStore={store.slug === session.store?.slug}
+        range={range}
+        summary={summarize(orders, range, now)}
+        balance={balance}
+        recentOrders={recent.orders}
+        products={products}
+        now={now}
+      />
     </>
   );
 }

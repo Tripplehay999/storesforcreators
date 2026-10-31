@@ -35,16 +35,16 @@ export default function CreatorGrid({ stores, products }: { stores: Store[]; pro
                 </div>
 
                 <div className="creator-product-info">
-                  <small>FEATURED PRODUCT</small>
+                  <small>Featured product</small>
                   <strong>{product.name}</strong>
                   <span>{productPrice(product)}</span>
-                  <b>View product ↗</b>
+                  <b>View product</b>
                 </div>
               </Link>
 
               <Link className="creator-store-link" href={`/store/${store.slug}`}>
-                Visit example storefront
-                <span>↗</span>
+                Visit store
+                <span aria-hidden="true">→</span>
               </Link>
             </div>
           </article>

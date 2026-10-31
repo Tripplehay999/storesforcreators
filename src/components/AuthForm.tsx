@@ -28,7 +28,6 @@ export default function AuthForm({ action, fields, submitLabel, pendingLabel, hi
   if (state.notice) {
     return (
       <div className="auth-notice" role="status">
-        <span>✳</span>
         <p>{state.notice}</p>
       </div>
     );

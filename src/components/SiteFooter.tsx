@@ -7,26 +7,26 @@ export default function SiteFooter() {
       <div className="container footer-main">
         <div>
           <Brand className="footer-brand" />
-          <p>Your audience. Our expertise.<br />Beautiful creator commerce, handled.</p>
+          <p>Online stores for creators, designed and run for you.</p>
         </div>
 
         <div className="footer-links">
-          <Link href="/#services">What we do</Link>
           <Link href="/#process">How it works</Link>
-          <Link href="/#stores">Creator stores</Link>
-          <Link href="/#calculator">Your potential</Link>
-          <Link href="/dashboard/products">Product studio</Link>
+          <Link href="/#examples">Example stores</Link>
+          <Link href="/#calculator">Earnings</Link>
+          <Link href="/#faq">FAQ</Link>
+          <Link href="/dashboard">Creator hub</Link>
         </div>
 
         <div className="footer-contact">
-          <strong>Let&apos;s create together.</strong>
-          <button className="btn btn-outline-light" data-apply>Become a partner ↗</button>
+          <strong>Ready to talk?</strong>
+          <button className="btn btn-outline-light" data-apply>Apply to partner</button>
         </div>
       </div>
 
       <div className="container footer-bottom">
-        <span>© {new Date().getFullYear()} Stores for Creators.</span>
-        <span>Illustrative creator profiles, earnings, and products are clearly identified throughout.</span>
+        <span>© {new Date().getFullYear()} Stores for Creators</span>
+        <span>Example creators, products and figures on this site are illustrative.</span>
         <button data-policy>Privacy &amp; terms</button>
       </div>
     </footer>

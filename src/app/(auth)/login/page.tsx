@@ -13,9 +13,8 @@ export default async function LoginPage({ searchParams }: Props) {
   return (
     <>
       <div className="modal-heading">
-        <span className="eyebrow">CREATOR LOGIN</span>
-        <h2>Welcome back,<br /><em>creator.</em></h2>
-        <p>Log in to see your store, products, and earnings.</p>
+        <h2>Log in</h2>
+        <p>See your store, products and earnings.</p>
       </div>
 
       {error === "link" && (
@@ -27,7 +26,7 @@ export default async function LoginPage({ searchParams }: Props) {
       <AuthForm
         action={signIn}
         hidden={{ next: next ?? "/dashboard" }}
-        submitLabel="Log in ↗"
+        submitLabel="Log in"
         pendingLabel="Logging in…"
         fields={[
           { name: "email", label: "Email address", type: "email", placeholder: "you@example.com", autoComplete: "email" },
@@ -36,7 +35,7 @@ export default async function LoginPage({ searchParams }: Props) {
         footer={
           <div className="auth-links">
             <Link href="/forgot-password">Forgot your password?</Link>
-            <span>New here? <Link href="/signup">Create a creator account ↗</Link></span>
+            <span>New here? <Link href="/signup">Create an account</Link></span>
           </div>
         }
       />

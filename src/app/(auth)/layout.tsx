@@ -8,29 +8,13 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         <Brand className="auth-brand" />
 
         <div className="auth-aside-copy">
-          <div className="eyebrow hero-eyebrow">
-            <span className="pulse-dot"></span>
-            YOUR CREATOR HUB
-          </div>
-          <h2>Every order.<br />Every milestone.<br /><em>All in one place.</em></h2>
-          <p>Your storefront, your products, and your earnings — beautifully organized.</p>
+          <h2>Your store, your products and your earnings in one place.</h2>
+          <ul className="auth-points">
+            <li>See every order and your share of it</li>
+            <li>Edit your storefront and products any time</li>
+            <li>Track payouts and export your records</li>
+          </ul>
         </div>
-
-        <div className="floating-label floating-bottom auth-floating">
-          <div className="floating-avatar">
-            <img
-              src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&h=120&fit=crop&crop=faces"
-              alt=""
-            />
-          </div>
-          <div>
-            <small>CREATOR STOREFRONT</small>
-            <strong>Your brand. Your world.</strong>
-            <span>Powered by SFC ✳</span>
-          </div>
-        </div>
-
-        <span className="auth-decoration" aria-hidden="true">✳</span>
       </aside>
 
       <section className="auth-main">

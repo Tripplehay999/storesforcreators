@@ -8,7 +8,7 @@ export default function NotFound() {
           <span className="eyebrow">404 / NOT FOUND</span>
           <h2>This page wandered off.<br /><em>Let&apos;s get you back.</em></h2>
           <p>The store or product you&apos;re looking for doesn&apos;t exist or isn&apos;t public yet.</p>
-          <Link className="btn btn-lime" href="/">Back to Stores for Creators ↗</Link>
+          <Link className="btn btn-lime" href="/">Back to Stores for Creators</Link>
         </div>
       </section>
     </main>

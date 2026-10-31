@@ -20,7 +20,7 @@ const sliders: {
   step: number;
   format: (value: number) => string;
 }[] = [
-  { key: "followers", id: "calc-followers", label: "TikTok followers", min: 5000, max: 1000000, step: 5000, format: number },
+  { key: "followers", id: "calc-followers", label: "Followers", min: 5000, max: 1000000, step: 5000, format: number },
   { key: "reach", id: "calc-reach", label: "Monthly store visitors as % of followers", min: 1, max: 30, step: 0.5, format: v => v.toFixed(1) + "%" },
   { key: "rate", id: "calc-rate", label: "Visitors who purchase", min: 0.5, max: 10, step: 0.5, format: v => v.toFixed(1) + "%" },
   { key: "price", id: "calc-price", label: "Average order value", min: 9, max: 109, step: 1, format: v => money(v) },
@@ -46,9 +46,9 @@ export default function Calculator() {
   const sfcCut = gross * (1 - split);
 
   const scenarios = [
-    { key: "low", label: "LOWER", factor: 0.6 },
-    { key: "mid", label: "SELECTED", factor: 1 },
-    { key: "high", label: "HIGHER", factor: 1.4 }
+    { key: "low", label: "Lower", factor: 0.6 },
+    { key: "mid", label: "Yours", factor: 1 },
+    { key: "high", label: "Higher", factor: 1.4 }
   ].map(scenario => {
     const scenarioOrders = Math.round(Math.round(visits * scenario.factor) * values.rate / 100);
     return { ...scenario, earnings: scenarioOrders * values.price * split };
@@ -63,10 +63,9 @@ export default function Calculator() {
     <div className="calculator-layout">
       <div className="calculator-controls reveal">
         <div className="calculator-intro">
-          <span className="calculator-sparkle">✳</span>
           <div>
-            <h3>Let&apos;s do the numbers.</h3>
-            <p>Start with your TikTok following.</p>
+            <h3>Your numbers</h3>
+            <p>Start with your follower count.</p>
           </div>
         </div>
 
@@ -120,39 +119,39 @@ export default function Calculator() {
 
       <div className="calculator-results reveal">
         <div className="results-header">
-          <span>✳ YOUR EARNINGS ESTIMATE</span>
-          <span>USD / MONTH</span>
+          <span>Estimated earnings</span>
+          <span>USD per month</span>
         </div>
 
         <div className="results-main">
-          <span>YOUR MONTHLY CUT</span>
+          <span>Your share each month</span>
           <strong>{money(creatorCut, 2)}</strong>
-          <p>Hypothetical monthly creator earnings at your selected assumptions.</p>
+          <p>Based on the assumptions you set on the left.</p>
         </div>
 
         <div className="result-stat-grid">
           <div>
-            <small>STORE VISITS</small>
+            <small>Store visits</small>
             <strong>{number(visits)}</strong>
           </div>
           <div>
-            <small>ORDERS</small>
+            <small>Orders</small>
             <strong>{number(orders)}</strong>
           </div>
           <div>
-            <small>GROSS SALES</small>
+            <small>Gross sales</small>
             <strong>{money(gross, 2)}</strong>
           </div>
           <div>
-            <small>SFC SHARE</small>
+            <small>Our share</small>
             <strong>{money(sfcCut, 2)}</strong>
           </div>
         </div>
 
         <div className="scenario-chart">
           <div className="scenario-heading">
-            <strong>Explore different scenarios</strong>
-            <small>LOWER / SELECTED / HIGHER TRAFFIC</small>
+            <strong>If traffic is lower or higher</strong>
+            <small>−40% / your estimate / +40%</small>
           </div>
 
           <div className="scenario-bars">
@@ -169,8 +168,8 @@ export default function Calculator() {
         </div>
 
         <div className="results-cta">
-          <button className="btn btn-lime" data-apply>Build my own store ↗</button>
-          <small>NO UPFRONT STORE SETUP FEE ✳</small>
+          <button className="btn btn-lime" data-apply>Apply to partner</button>
+          <small>No setup fee</small>
         </div>
       </div>
     </div>

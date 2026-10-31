@@ -194,9 +194,8 @@ export default function UIRoot({ signedIn }: { signedIn: boolean }) {
         <button className="modal-close" data-close aria-label="Close">×</button>
 
         <div className="modal-heading">
-          <span className="eyebrow">BECOME A SFC CREATOR</span>
-          <h2>Let&apos;s build<br /><em>your next thing.</em></h2>
-          <p>Tell us a little about yourself and your audience.</p>
+          <h2>Apply to partner</h2>
+          <p>Tell us a little about you and your audience. There&apos;s no commitment.</p>
         </div>
 
         <form id="apply-form" ref={formRef} action={submit}>
@@ -254,13 +253,13 @@ export default function UIRoot({ signedIn }: { signedIn: boolean }) {
           </label>
 
           <button className="btn btn-dark" type="submit" disabled={sending}>
-            {sending ? "Sending…" : signedIn ? "Send my application ↗" : "Create my account & apply ↗"}
+            {sending ? "Sending…" : signedIn ? "Send application" : "Create account and apply"}
           </button>
 
           <p id="apply-status" className={`form-status${application.status === "error" ? " form-error" : ""}`}>
             {application.message || (signedIn
               ? "We'll review your details and reply by email."
-              : <>Already have an account? <a href="/login">Log in ↗</a></>)}
+              : <>Already have an account? <a href="/login">Log in</a></>)}
           </p>
 
           {application.status === "error" && (

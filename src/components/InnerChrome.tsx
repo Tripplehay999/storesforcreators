@@ -4,7 +4,7 @@ import Brand from "./Brand";
 export function DemoRibbon() {
   return (
     <div className="demo-ribbon">
-      <span>✳ STOREFRONT DESIGN PREVIEW — NOT A LIVE CHECKOUT</span>
+      <span>Storefront preview · checkout isn&apos;t live yet</span>
       <Link href="/">← Back to Stores for Creators</Link>
     </div>
   );

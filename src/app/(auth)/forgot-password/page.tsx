@@ -9,14 +9,13 @@ export default function ForgotPasswordPage() {
   return (
     <>
       <div className="modal-heading">
-        <span className="eyebrow">PASSWORD RESET</span>
-        <h2>Happens to<br /><em>the best of us.</em></h2>
+        <h2>Reset your password</h2>
         <p>Enter your email and we&apos;ll send you a link to choose a new password.</p>
       </div>
 
       <AuthForm
         action={requestPasswordReset}
-        submitLabel="Send reset link ↗"
+        submitLabel="Send reset link"
         pendingLabel="Sending…"
         fields={[
           { name: "email", label: "Email address", type: "email", placeholder: "you@example.com", autoComplete: "email" }

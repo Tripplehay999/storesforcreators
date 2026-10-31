@@ -31,7 +31,7 @@ export default async function StorePage({ params }: Props) {
             <span className="eyebrow">{store.category}</span>
             <h1>{store.headline}<br /><em>{store.headlineEm}</em></h1>
             <p>{store.bio}</p>
-            <a className="btn btn-dark" href="#store-collection">Shop the collection ↗</a>
+            <a className="btn btn-dark" href="#store-collection">Shop the collection</a>
           </div>
 
           <div className="store-hero-photo">
@@ -58,7 +58,7 @@ export default async function StorePage({ params }: Props) {
                     <h3>{product.name}</h3>
                     <p>{product.tagline}</p>
                     <strong>{productPrice(product)}</strong>
-                    <Link href={productLink(product, store.slug)}>Explore product ↗</Link>
+                    <Link href={productLink(product, store.slug)}>Explore product</Link>
                   </div>
                 </article>
               ))}

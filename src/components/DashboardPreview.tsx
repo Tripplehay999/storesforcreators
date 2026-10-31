@@ -1,103 +1,82 @@
 "use client";
 
 import { useState } from "react";
-import { money, number } from "@/lib/format";
-import OrderBars from "./OrderBars";
+import { money } from "@/lib/format";
 
-const dashboardData = {
-  weeks: {
-    labels: ["W1", "W2", "W3", "W4"],
-    orders: [5, 4, 7, 9],
-    earnings: 612.5,
-    title: "Weekly orders",
-    note: "4-WEEK OVERVIEW"
+// Sample figures for the landing page; mirrors the layout of the real creator hub.
+const SAMPLE = {
+  month: {
+    label: "Last 30 days",
+    earnings: 1761.5,
+    orders: 71,
+    change: 41,
+    bars: [3, 5, 2, 4, 6, 3, 2, 5, 7, 4, 6, 8, 5, 3, 6, 9, 7, 5, 8, 6, 10, 7, 9, 6, 8, 11, 9, 7, 10, 12]
   },
-  months: {
-    labels: ["JUL", "AUG", "SEP", "OCT"],
-    orders: [12, 17, 18, 25],
-    earnings: 1764,
-    title: "Monthly orders",
-    note: "LAST 4 MONTHS"
+  year: {
+    label: "Last 12 months",
+    earnings: 13500.5,
+    orders: 510,
+    change: 64,
+    bars: [12, 15, 14, 18, 21, 19, 24, 27, 26, 31, 35, 38]
   }
 };
 
-type Period = keyof typeof dashboardData;
+const ORDERS = [
+  ["Budget Planner Collection", "Today", 29.5],
+  ["1:1 Financial Coaching", "Yesterday", 52.5],
+  ["Budget Planner Collection", "Oct 29", 19.5]
+] as const;
 
-/** The illustrative "Creator hub" mock on the landing page. */
 export default function DashboardPreview() {
-  const [period, setPeriod] = useState<Period>("weeks");
-  const data = dashboardData[period];
+  const [period, setPeriod] = useState<keyof typeof SAMPLE>("month");
+  const data = SAMPLE[period];
+  const max = Math.max(...data.bars);
 
   return (
-    <div className="dashboard-mock reveal">
-      <div className="dash-top">
-        <span>✳ JASMINE&apos;S FINANCIALS · CREATOR HUB</span>
-        <span className="sample-badge">SAMPLE DATA</span>
-      </div>
-
-      <div className="dash-greeting">
+    <div className="dp" aria-label="Example creator dashboard">
+      <div className="dp-top">
         <div>
-          <small>YOUR STORE / OVERVIEW</small>
-          <h3>Your money, <em>your momentum.</em></h3>
-          <p>Every order, every milestone, beautifully organized.</p>
+          <strong>Good afternoon, Jasmine</strong>
+          <span>{data.label}</span>
         </div>
-
-        <div className="dash-avatar">
-          <img
-            src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=180&h=180&fit=crop&crop=faces"
-            alt="Jasmine example creator profile photo"
-          />
+        <div className="dp-toggle" role="group" aria-label="Date range">
+          <button type="button" className={period === "month" ? "active" : ""} aria-pressed={period === "month"} onClick={() => setPeriod("month")}>30D</button>
+          <button type="button" className={period === "year" ? "active" : ""} aria-pressed={period === "year"} onClick={() => setPeriod("year")}>12M</button>
         </div>
       </div>
 
-      <div className="dash-tabs">
-        {([["weeks", "This month · by week"], ["months", "Last 4 months"]] as const).map(([key, label]) => (
-          <button
-            key={key}
-            type="button"
-            className={period === key ? "active" : ""}
-            aria-pressed={period === key}
-            onClick={() => setPeriod(key)}
-          >
-            {label}
-          </button>
+      <div className="dp-stats">
+        <div>
+          <small>Your earnings</small>
+          <strong>{money(data.earnings, 2)}</strong>
+          <span className="dp-delta">+{data.change}%</span>
+        </div>
+        <div>
+          <small>Orders</small>
+          <strong>{data.orders}</strong>
+          <span className="dp-delta">+{Math.round(data.change * 1.2)}%</span>
+        </div>
+      </div>
+
+      <div className="dp-chart" aria-hidden="true">
+        {data.bars.map((value, index) => (
+          <span key={`${period}-${index}`} style={{ height: `${(value / max) * 100}%` }} />
         ))}
       </div>
 
-      <div className="dash-metrics">
-        <div className="dash-earnings">
-          <small>YOUR CREATOR EARNINGS ✳</small>
-          <strong>{money(data.earnings, 2)}</strong>
-          <span>USD · illustrative creator share</span>
-        </div>
+      <ul className="dp-orders">
+        {ORDERS.map(([name, when, share]) => (
+          <li key={`${name}-${when}`}>
+            <div>
+              <strong>{name}</strong>
+              <span>{when}</span>
+            </div>
+            <b>+{money(share, 2)}</b>
+          </li>
+        ))}
+      </ul>
 
-        <div className="dash-orders">
-          <small>PRODUCT ORDERS ↗</small>
-          <strong>{number(data.orders.reduce((sum, value) => sum + value, 0))}</strong>
-          <span>Example completed orders</span>
-        </div>
-      </div>
-
-      <div className="dash-chart">
-        <div className="dash-chart-heading">
-          <div>
-            <strong>{data.title}</strong>
-            <small>{data.note}</small>
-          </div>
-          <span>EXAMPLE DATA</span>
-        </div>
-
-        <OrderBars labels={data.labels} orders={data.orders} />
-
-        <small className="dash-chart-caption">
-          Sample numbers for design demonstration only.
-        </small>
-      </div>
-
-      <div className="dash-footer">
-        <span>✳ EXAMPLE STOREFRONT</span>
-        <span>CREATOR SHARE <strong>50%</strong></span>
-      </div>
+      <p className="dp-note">Sample data</p>
     </div>
   );
 }

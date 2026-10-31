@@ -4,11 +4,10 @@ import Link from "next/link";
 import { useState } from "react";
 
 const links = [
-  ["/#services", "What we do"],
   ["/#process", "How it works"],
-  ["/#stores", "Creator stores"],
-  ["/#calculator", "Your potential"],
-  ["/#faq", "FAQs"]
+  ["/#examples", "Examples"],
+  ["/#calculator", "Earnings"],
+  ["/#faq", "FAQ"]
 ];
 
 export default function MainNav({ signedIn }: { signedIn: boolean }) {
@@ -24,16 +23,16 @@ export default function MainNav({ signedIn }: { signedIn: boolean }) {
 
       <div className="nav-actions">
         <Link className="login-link" href={signedIn ? "/dashboard" : "/login"}>
-          {signedIn ? "Creator hub" : "Creator login"}
+          {signedIn ? "Creator hub" : "Log in"}
         </Link>
-        <button className="btn btn-dark nav-apply" data-apply>Become a partner ↗</button>
+        <button className="btn btn-dark nav-apply" data-apply>Apply</button>
         <button
           className="menu-toggle"
           aria-label="Toggle navigation"
           aria-expanded={open}
           onClick={() => setOpen(value => !value)}
         >
-          ☰
+          <span aria-hidden="true">{open ? "✕" : "☰"}</span>
         </button>
       </div>
     </>
