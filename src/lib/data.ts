@@ -1,7 +1,7 @@
 import "server-only";
 
 import { cache } from "react";
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { rowToProduct, rowToStore, seedProducts, seedStores } from "./catalog";
 import { createClient, isSupabaseConfigured } from "./supabase/server";
 import type { Application, Order, Product, Profile, Store } from "./types";
@@ -101,6 +101,18 @@ export async function requireAdmin() {
   const session = await requireSession();
 
   if (session.profile.role !== "admin") redirect("/dashboard");
+  return session;
+}
+
+/**
+ * Guard for admin pages: anyone who isn't an active admin — signed out, a creator,
+ * or suspended — gets a plain 404, so the admin area doesn't reveal that it exists.
+ * Call it in every admin page, not just the layout: layouts aren't re-run on every navigation.
+ */
+export async function adminOnly() {
+  const session = await getSession();
+
+  if (!session || session.profile.suspended || session.profile.role !== "admin") notFound();
   return session;
 }
 

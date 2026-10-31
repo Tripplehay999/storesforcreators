@@ -7,7 +7,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ typ
   const session = await getSession();
 
   if (!session || session.profile.role !== "admin" || session.profile.suspended) {
-    return new NextResponse("Forbidden", { status: 403 });
+    return new NextResponse("Not found", { status: 404 });
   }
 
   const { type } = await params;

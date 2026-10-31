@@ -3,8 +3,10 @@ import ActionForm from "@/components/admin/ActionForm";
 import { getStoreBalances, getUsers } from "@/lib/admin-data";
 import { money, number } from "@/lib/format";
 import { deleteStore, updateStore } from "../actions";
+import { adminOnly } from "@/lib/data";
 
 export default async function AdminStoresPage() {
+  await adminOnly();
   const [stores, users] = await Promise.all([getStoreBalances(), getUsers()]);
   const owners = new Map(users.map(user => [user.id, user]));
 

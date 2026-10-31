@@ -4,10 +4,12 @@ import { getAllOrders, getStoreBalances } from "@/lib/admin-data";
 import { getProducts } from "@/lib/data";
 import { money, shortDate } from "@/lib/format";
 import { deleteOrder, recordOrder, setOrderStatus } from "../actions";
+import { adminOnly } from "@/lib/data";
 
 type Props = { searchParams: Promise<{ store?: string; status?: string }> };
 
 export default async function AdminOrdersPage({ searchParams }: Props) {
+  await adminOnly();
   const { store, status } = await searchParams;
   const [orders, stores, products] = await Promise.all([
     getAllOrders({ store: store || undefined, status: status || undefined }),

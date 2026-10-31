@@ -4,10 +4,12 @@ import { getStoreBalances } from "@/lib/admin-data";
 import { productImage, productPrice } from "@/lib/catalog";
 import { getProducts } from "@/lib/data";
 import { deleteProductAdmin } from "../actions";
+import { adminOnly } from "@/lib/data";
 
 type Props = { searchParams: Promise<{ store?: string }> };
 
 export default async function AdminProductsPage({ searchParams }: Props) {
+  await adminOnly();
   const { store } = await searchParams;
   const [products, stores] = await Promise.all([getProducts(store || undefined), getStoreBalances()]);
   const storeName = new Map(stores.map(item => [item.slug, item.name]));

@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { getAllOrders, getCounts, getOrdersSince, getStoreBalances } from "@/lib/admin-data";
 import { calendarDay, money, number, shortDate, zonedDate } from "@/lib/format";
+import { adminOnly } from "@/lib/data";
 
 const DAYS = 30;
 
 export default async function AdminOverviewPage() {
+  await adminOnly();
   const today = zonedDate(new Date());
   const days = Array.from({ length: DAYS }, (_, index) => ({
     day: calendarDay(today.year, today.month, today.day - (DAYS - 1) + index),

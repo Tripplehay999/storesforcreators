@@ -32,7 +32,8 @@ export async function proxy(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
   const { pathname } = request.nextUrl;
 
-  if (!user && (pathname.startsWith("/dashboard") || pathname.startsWith("/admin") || pathname === "/reset-password")) {
+  // /admin is deliberately not listed: signed-out visitors get the admin pages' 404, not a login prompt.
+  if (!user && (pathname.startsWith("/dashboard") || pathname === "/reset-password")) {
     const url = new URL("/login", request.url);
     url.searchParams.set("next", pathname + request.nextUrl.search);
     return NextResponse.redirect(url);

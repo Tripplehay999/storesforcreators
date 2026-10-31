@@ -2,14 +2,14 @@ import type { Metadata } from "next";
 import AdminNav from "@/components/admin/AdminNav";
 import ModeSwitch from "@/components/ModeSwitch";
 import { getCounts } from "@/lib/admin-data";
-import { requireAdmin } from "@/lib/data";
+import { adminOnly } from "@/lib/data";
 import "./admin.css";
 
 export const metadata: Metadata = { title: "Admin · SFC Control" };
 export const dynamic = "force-dynamic";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  const { profile } = await requireAdmin();
+  const { profile } = await adminOnly();
   const counts = await getCounts();
 
   return (

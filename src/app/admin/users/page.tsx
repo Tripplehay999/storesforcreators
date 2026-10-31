@@ -1,14 +1,14 @@
 import Link from "next/link";
 import ActionForm from "@/components/admin/ActionForm";
 import { getStoreBalances, getUsers } from "@/lib/admin-data";
-import { requireAdmin } from "@/lib/data";
+import { adminOnly } from "@/lib/data";
 import { money, shortDate } from "@/lib/format";
 import { setUserRole } from "../actions";
 
 type Props = { searchParams: Promise<{ q?: string; role?: string }> };
 
 export default async function AdminUsersPage({ searchParams }: Props) {
-  const { profile: me } = await requireAdmin();
+  const { profile: me } = await adminOnly();
   const { q = "", role } = await searchParams;
   const [allUsers, balances] = await Promise.all([getUsers(q.trim() || undefined), getStoreBalances()]);
   const balanceOf = new Map(balances.map(item => [item.slug, item.balance]));

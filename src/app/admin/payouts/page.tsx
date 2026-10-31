@@ -3,12 +3,14 @@ import ActionForm from "@/components/admin/ActionForm";
 import { getPayouts, getStoreBalances } from "@/lib/admin-data";
 import { money, shortDate } from "@/lib/format";
 import { createPayout, setPayoutStatus } from "../actions";
+import { adminOnly } from "@/lib/data";
 
 type Props = { searchParams: Promise<{ status?: string }> };
 
 const STATUS_PILL = { pending: "amber", paid: "green", cancelled: "" } as const;
 
 export default async function AdminPayoutsPage({ searchParams }: Props) {
+  await adminOnly();
   const { status } = await searchParams;
   const [stores, payouts] = await Promise.all([getStoreBalances(), getPayouts({ status: status || undefined })]);
 

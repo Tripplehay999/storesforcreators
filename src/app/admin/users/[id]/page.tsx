@@ -10,7 +10,7 @@ import {
   getStoreBalances,
   getUser
 } from "@/lib/admin-data";
-import { getProducts, requireAdmin } from "@/lib/data";
+import { adminOnly, getProducts } from "@/lib/data";
 import { money, number, shortDate } from "@/lib/format";
 import { hasServiceRole } from "@/lib/supabase/admin";
 import {
@@ -37,7 +37,7 @@ const PAYOUT_PILL = { pending: "amber", paid: "green", cancelled: "" } as const;
 
 export default async function AdminUserPage({ params }: Props) {
   const { id } = await params;
-  const { profile: me } = await requireAdmin();
+  const { profile: me } = await adminOnly();
   const user = await getUser(id);
 
   if (!user) notFound();

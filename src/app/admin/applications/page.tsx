@@ -3,6 +3,7 @@ import ActionForm from "@/components/admin/ActionForm";
 import { getApplications } from "@/lib/data";
 import { shortDate } from "@/lib/format";
 import { deleteApplication, setApplicationStatus } from "../actions";
+import { adminOnly } from "@/lib/data";
 
 type Props = { searchParams: Promise<{ status?: string }> };
 
@@ -10,6 +11,7 @@ const STATUSES = ["new", "reviewing", "accepted", "declined"] as const;
 const PILL = { new: "blue", reviewing: "amber", accepted: "green", declined: "red" } as const;
 
 export default async function AdminApplicationsPage({ searchParams }: Props) {
+  await adminOnly();
   const { status } = await searchParams;
   const all = await getApplications();
   const applications = status ? all.filter(item => item.status === status) : all;
