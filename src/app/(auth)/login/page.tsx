@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import AuthForm from "@/components/AuthForm";
-import { signIn } from "../actions";
+import Icon from "@/components/hub/Icon";
+import LoginForm from "@/components/auth/LoginForm";
+import { safeRedirectPath } from "@/lib/redirect";
 
-export const metadata: Metadata = { title: "Creator login | Stores for Creators" };
+export const metadata: Metadata = { title: "Log in | Stores for Creators" };
 
 type Props = { searchParams: Promise<{ next?: string; error?: string }> };
 
@@ -12,33 +13,22 @@ export default async function LoginPage({ searchParams }: Props) {
 
   return (
     <>
-      <div className="modal-heading">
-        <h2>Log in</h2>
-        <p>See your store, products and earnings.</p>
+      <div className="au-head">
+        <h1>Welcome back</h1>
+        <p>Log in to manage your store.</p>
       </div>
 
-      {error === "link" && (
-        <p className="form-status form-error auth-banner">
-          That link has expired or was already used. Log in, or request a new one.
-        </p>
-      )}
-
-      <AuthForm
-        action={signIn}
-        hidden={{ next: next ?? "/dashboard" }}
-        submitLabel="Log in"
-        pendingLabel="Logging in…"
-        fields={[
-          { name: "email", label: "Email address", type: "email", placeholder: "you@example.com", autoComplete: "email" },
-          { name: "password", label: "Password", type: "password", placeholder: "Your password", autoComplete: "current-password" }
-        ]}
-        footer={
-          <div className="auth-links">
-            <Link href="/forgot-password">Forgot your password?</Link>
-            <span>New here? <Link href="/signup">Create an account</Link></span>
+      <LoginForm
+        next={safeRedirectPath(next)}
+        notice={error === "link" ? (
+          <div className="au-note" role="status">
+            <Icon name="alert" size={18} />
+            <span>That link has expired or was already used. Log in below, or ask for a new link.</span>
           </div>
-        }
+        ) : undefined}
       />
+
+      <p className="au-switch">New to Stores for Creators? <Link href="/signup">Create an account</Link></p>
     </>
   );
 }

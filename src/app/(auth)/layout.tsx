@@ -1,25 +1,38 @@
 import Link from "next/link";
-import Brand from "@/components/Brand";
+import "./auth.css";
+
+const POINTS = [
+  "Your own branded store, set up for you",
+  "Every order and payout in one dashboard",
+  "Share links, discount codes and growth ideas"
+];
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
-    <main className="auth-page">
-      <aside className="auth-aside">
-        <Brand className="auth-brand" />
+    <main className="au">
+      <aside className="au-brand">
+        <Link className="au-logo" href="/">
+          <span className="au-logo-mark">SFC</span>
+          <span>Stores for Creators</span>
+        </Link>
 
-        <div className="auth-aside-copy">
-          <h2>Your store, your products and your earnings in one place.</h2>
-          <ul className="auth-points">
-            <li>See every order and your share of it</li>
-            <li>Edit your storefront and products any time</li>
-            <li>Track payouts and export your records</li>
+        <div className="au-brand-copy">
+          <h2>
+            <span>You post.</span>
+            <span>We sell.</span>
+            <span className="au-hl">You get paid.</span>
+          </h2>
+          <ul>
+            {POINTS.map(point => <li key={point}>{point}</li>)}
           </ul>
         </div>
+
+        <p className="au-brand-foot">No setup fee · Split agreed up front</p>
       </aside>
 
-      <section className="auth-main">
-        <Link className="back-link auth-back" href="/">← Back to Stores for Creators</Link>
-        <div className="auth-card">{children}</div>
+      <section className="au-main">
+        <div className="au-card">{children}</div>
+        <Link className="au-home" href="/">← Back to Stores for Creators</Link>
       </section>
     </main>
   );

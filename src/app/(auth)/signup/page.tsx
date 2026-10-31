@@ -1,16 +1,16 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import AuthForm from "@/components/AuthForm";
+import AuthForm from "@/components/auth/AuthForm";
 import { signUp } from "../actions";
 
-export const metadata: Metadata = { title: "Create your creator account | Stores for Creators" };
+export const metadata: Metadata = { title: "Create your account | Stores for Creators" };
 
 export default function SignupPage() {
   return (
     <>
-      <div className="modal-heading">
-        <h2>Create your account</h2>
-        <p>Set up your storefront and track your earnings in one place.</p>
+      <div className="au-head">
+        <h1>Create your account</h1>
+        <p>Free to start. It takes about a minute.</p>
       </div>
 
       <AuthForm
@@ -18,17 +18,14 @@ export default function SignupPage() {
         submitLabel="Create account"
         pendingLabel="Creating your account…"
         fields={[
-          { name: "full_name", label: "Your name", placeholder: "Your full name", autoComplete: "name" },
-          { name: "social_handle", label: "TikTok or Instagram profile", placeholder: "@yourhandle", required: false },
-          { name: "email", label: "Email address", type: "email", placeholder: "you@example.com", autoComplete: "email" },
-          { name: "password", label: "Password", type: "password", placeholder: "At least 8 characters", autoComplete: "new-password", minLength: 8 }
+          { name: "full_name", label: "Your name", placeholder: "Jasmine Carter", autoComplete: "name", autoFocus: true },
+          { name: "social_handle", label: "TikTok or Instagram", placeholder: "@yourhandle", optional: true },
+          { name: "email", label: "Email", type: "email", placeholder: "you@example.com", autoComplete: "email" },
+          { name: "password", label: "Password", type: "password", placeholder: "Create a password", autoComplete: "new-password", strength: true }
         ]}
-        footer={
-          <div className="auth-links">
-            <span>Already have an account? <Link href="/login">Log in</Link></span>
-          </div>
-        }
       />
+
+      <p className="au-switch">Already have an account? <Link href="/login">Log in</Link></p>
     </>
   );
 }

@@ -191,6 +191,7 @@ export default function UIRoot({ signedIn }: { signedIn: boolean }) {
         </div>
 
         <form id="apply-form" ref={formRef} action={submit}>
+          <input className="hp-field" name="website" tabIndex={-1} autoComplete="off" aria-hidden="true" />
           <label>
             Your name
             <input name="name" required placeholder="Your full name" />

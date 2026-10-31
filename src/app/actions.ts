@@ -1,20 +1,16 @@
 "use server";
 
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { adminEmails } from "@/lib/email";
+import { applicationReceivedEmail, newApplicationEmail } from "@/lib/email-templates";
+import { sendLater } from "@/lib/notify";
+import { siteUrl } from "@/lib/site";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/server";
 
 export type ApplicationState = {
   status: "idle" | "sent" | "error";
   message: string;
 };
-
-async function siteUrl() {
-  if (process.env.NEXT_PUBLIC_SITE_URL) return process.env.NEXT_PUBLIC_SITE_URL.replace(/\/$/, "");
-
-  const headerList = await headers();
-  return headerList.get("origin") ?? `https://${headerList.get("host")}`;
-}
 
 /**
  * "Become a partner" form. Visitors who aren't signed in also choose a
@@ -25,6 +21,11 @@ export async function submitApplication(
   formData: FormData
 ): Promise<ApplicationState> {
   const field = (name: string, max: number) => String(formData.get(name) || "").trim().slice(0, max);
+
+  // Honeypot: a field people never see. Bots that fill it get a normal-looking reply and nothing is saved.
+  if (field("website", 200)) {
+    return { status: "sent", message: "Application received. We'll be in touch by email." };
+  }
 
   const application = {
     name: field("name", 200),
@@ -60,7 +61,7 @@ export async function submitApplication(
       password,
       options: {
         data: { full_name: application.name, social_handle: application.social_profile },
-        emailRedirectTo: `${await siteUrl()}/auth/callback?next=/dashboard`
+        emailRedirectTo: `${await siteUrl()}/auth/callback?next=${encodeURIComponent("/dashboard?notice=welcome")}`
       }
     });
 
@@ -83,6 +84,24 @@ export async function submitApplication(
 
   if (error) {
     return { status: "error", message: "We couldn't send your application. Copy your details instead." };
+  }
+
+  const site = await siteUrl();
+  sendLater({ to: application.email, ...applicationReceivedEmail({ name: application.name, siteUrl: site }) });
+  const admins = adminEmails();
+  if (admins.length) {
+    sendLater({
+      to: admins,
+      ...newApplicationEmail({
+        name: application.name,
+        email: application.email,
+        social: application.social_profile,
+        followers: application.followers,
+        niche: application.niche,
+        message: application.message,
+        adminUrl: `${site}/admin/applications`
+      })
+    });
   }
 
   // Brand-new account with an active session → straight into the creator hub.
