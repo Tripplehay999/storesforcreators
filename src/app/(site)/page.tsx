@@ -74,7 +74,6 @@ export default async function HomePage() {
     store,
     product: products.find(item => item.id === store.featuredProductId) ?? products.find(item => item.store === store.slug)
   });
-  const live = stores.filter(store => !store.isDemo).map(withProduct);
   const examples = stores.filter(store => store.isDemo).map(withProduct);
 
   return (
@@ -189,21 +188,9 @@ export default async function HomePage() {
 
         <section className="b-section b-section-lilac" id="stores">
           <div className="container">
-            {live.length > 0 && (
-              <>
-                <div className="b-head">
-                  <h2 className="b-title">Live <span className="b-mark">now</span></h2>
-                  <p>Creators already selling on Stores for Creators.</p>
-                </div>
-                <div className="b-stores">
-                  {live.map(item => <StoreCard key={item.store.slug} {...item} />)}
-                </div>
-              </>
-            )}
-
-            <div className={`b-head${live.length > 0 ? " b-head-spaced" : ""}`}>
-              <h2 className="b-title">Store concepts</h2>
-              <p>What your store could look like. Tap one to look around.</p>
+            <div className="b-head">
+              <h2 className="b-title">What your store could look like</h2>
+              <p>Tap one to look around.</p>
             </div>
             <div className="b-stores">
               {examples.map(item => <StoreCard key={item.store.slug} {...item} />)}

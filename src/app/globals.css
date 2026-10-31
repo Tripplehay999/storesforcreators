@@ -1654,14 +1654,3 @@ input[type="range"]::-moz-range-thumb {
   font-size: 16px;
 }
 
-.concept-tag {
-  display: block;
-  width: fit-content;
-  margin-bottom: 14px;
-  padding: 4px 10px;
-  border: 1.5px solid currentColor;
-  border-radius: 99px;
-  color: var(--purple-dark);
-  font-size: 12px;
-  font-weight: 700;
-}

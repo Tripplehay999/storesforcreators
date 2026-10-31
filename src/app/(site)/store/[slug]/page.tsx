@@ -27,7 +27,6 @@ export default async function StorePage({ params }: Props) {
 
         <section className="container store-hero">
           <div>
-            {store.isDemo && <span className="concept-tag">Store concept</span>}
             <span className="eyebrow">{store.category}</span>
             <h1>{store.headline}<br /><em>{store.headlineEm}</em></h1>
             <p>{store.bio}</p>
