@@ -321,11 +321,6 @@ p {
   }
 }
 
-.hero-visual {
-  position: relative;
-  min-height: 510px;
-}
-
 .hero-photo {
   position: absolute;
   inset: 0 35px 0 35px;
@@ -346,186 +341,6 @@ p {
 /* PROCESS */
 
 /* COMBINED CREATOR CARDS */
-
-.creator-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  align-items: stretch;
-  gap: 20px;
-}
-
-.creator-card {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-  overflow: hidden;
-  border: 1px solid #e7dfe8;
-  border-radius: 18px;
-  background: white;
-  box-shadow: 0 12px 32px #3124390b;
-  transition: transform .3s, box-shadow .3s;
-}
-
-.creator-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 22px 45px #3124391b;
-}
-
-.creator-photo {
-  position: relative;
-  display: block;
-  height: 215px;
-  overflow: hidden;
-  background: #e7ddec;
-}
-
-.creator-photo > img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center 33%;
-  transition: transform .6s;
-}
-
-.creator-card:hover .creator-photo > img {
-  transform: scale(1.055);
-}
-
-.creator-photo::after {
-  position: absolute;
-  inset: 50% 0 0;
-  background: linear-gradient(transparent, #1b152b83);
-  content: "";
-}
-
-.creator-photo-title {
-  position: absolute;
-  z-index: 2;
-  bottom: 18px;
-  left: 19px;
-  color: white;
-  font-family: var(--serif);
-  font-size: 35px;
-  font-style: italic;
-  line-height: 1;
-  text-shadow: 0 2px 15px #0005;
-}
-
-.creator-photo-badge {
-  position: absolute;
-  z-index: 3;
-  top: 12px;
-  right: 12px;
-  padding: 9px 11px;
-  border-radius: 9px;
-  background: #fffdf3ee;
-  color: #755b8b;
-  font-size: 9px;
-  font-weight: 800;
-  letter-spacing: .05em;
-}
-
-.creator-card-body {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  padding: 21px;
-}
-
-.creator-category {
-  color: var(--purple);
-  font-size: 9px;
-  font-weight: 800;
-  letter-spacing: .1em;
-}
-
-.creator-card h3 {
-  margin: 10px 0 7px;
-  font-size: 23px;
-  line-height: 1.25;
-}
-
-.creator-card-description {
-  min-height: 40px;
-  margin-bottom: 17px;
-  color: var(--muted);
-  font-size: 12px;
-}
-
-.creator-product {
-  display: grid;
-  grid-template-columns: 110px minmax(0, 1fr);
-  gap: 12px;
-  align-items: center;
-  margin-top: auto;
-  padding: 10px;
-  border: 1px solid #ece5ed;
-  border-radius: 12px;
-  background: #fbf8fc;
-  transition: background .2s;
-}
-
-.creator-product:hover {
-  background: #f3eaf6;
-}
-
-.creator-product-photo {
-  width: 110px;
-  height: 112px;
-  overflow: hidden;
-  border-radius: 8px;
-  background: #e8dfea;
-}
-
-.creator-product-photo > img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.creator-product-info {
-  display: flex;
-  flex-direction: column;
-  gap: 7px;
-  min-width: 0;
-}
-
-.creator-product-info small {
-  color: #987ea8;
-  font-size: 8px;
-  font-weight: 800;
-  letter-spacing: .08em;
-}
-
-.creator-product-info strong {
-  font-size: 12px;
-  line-height: 1.4;
-}
-
-.creator-product-info span {
-  color: #725f7c;
-  font-size: 11px;
-  font-weight: 700;
-}
-
-.creator-product-info b {
-  color: var(--purple);
-  font-size: 10px;
-}
-
-.creator-store-link {
-  display: inline-flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-top: 17px;
-  padding-top: 15px;
-  border-top: 1px solid var(--line);
-  color: #654879;
-  font-size: 12px;
-  font-weight: 800;
-}
 
 /* CALCULATOR */
 
@@ -1467,42 +1282,8 @@ input[type="range"]::-moz-range-thumb {
     gap: 15px;
   }
 
-  .hero-visual {
-    min-height: 420px;
-  }
-
   .hero-photo {
     inset-inline: 10px;
-  }
-
-  .creator-grid {
-    gap: 12px;
-  }
-
-  .creator-card-body {
-    padding: 14px;
-  }
-
-  .creator-product {
-    grid-template-columns: 85px minmax(0, 1fr);
-    gap: 9px;
-  }
-
-  .creator-product-photo {
-    width: 85px;
-    height: 100px;
-  }
-
-  .creator-photo {
-    height: 185px;
-  }
-
-  .creator-photo-title {
-    font-size: 28px;
-  }
-
-  .creator-card h3 {
-    font-size: 20px;
   }
 }
 
@@ -1535,41 +1316,8 @@ input[type="range"]::-moz-range-thumb {
     font-size: clamp(48px, 10vw, 70px);
   }
 
-  .hero-visual {
-    min-height: 420px;
-    max-width: 430px;
-    width: 100%;
-    margin: 0 auto;
-  }
-
   .hero-photo {
     inset-inline: 25px;
-  }
-
-  .creator-grid {
-    grid-template-columns: 1fr;
-    gap: 20px;
-  }
-
-  .creator-photo {
-    height: 235px;
-  }
-
-  .creator-card-body {
-    padding: 20px;
-  }
-
-  .creator-product {
-    grid-template-columns: 115px minmax(0, 1fr);
-  }
-
-  .creator-product-photo {
-    width: 115px;
-    height: 110px;
-  }
-
-  .creator-card-description {
-    min-height: 0;
   }
 
   .footer-main {
