@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { CSSProperties } from "react";
 import { InnerTop } from "@/components/InnerChrome";
+import VisitTracker from "@/components/VisitTracker";
 import { productImage, productLink, productPrice } from "@/lib/catalog";
 import { getProducts, getStore } from "@/lib/data";
 
@@ -24,6 +25,7 @@ export default async function StorePage({ params }: Props) {
       <div className="store-page" style={{ "--store-bg": store.background } as CSSProperties}>
 
         <InnerTop back="/#stores" />
+        <VisitTracker store={store.slug} />
 
         <section className="container store-hero">
           <div>

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { AdminBanner, Empty, PageHeader } from "@/components/hub/ui";
 import Studio from "@/components/Studio";
 import { getProducts, getViewedStore, requireSession } from "@/lib/data";
+import { getProductFiles } from "@/lib/growth-data";
 
 type Props = { searchParams: Promise<{ product?: string; store?: string }> };
 
@@ -25,6 +26,7 @@ export default async function ProductsPage({ searchParams }: Props) {
   }
 
   const products = await getProducts(store.slug);
+  const files = await getProductFiles(products.map(product => product.id));
   const isOwnStore = store.slug === session.store?.slug;
 
   return (
@@ -37,6 +39,9 @@ export default async function ProductsPage({ searchParams }: Props) {
         initialId={product}
         ownStore={session.store?.slug ?? null}
         userId={session.profile.id}
+        initialFiles={files.ready
+          ? Object.fromEntries(Object.entries(files.files).map(([id, file]) => [id, { fileName: file.fileName, sizeBytes: file.sizeBytes }]))
+          : null}
       />
     </>
   );

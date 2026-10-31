@@ -2,7 +2,13 @@
 
 import { revalidatePath } from "next/cache";
 import { normalizeProduct, productToRow, safeColor, safeImage, slugify } from "@/lib/catalog";
-import { getSession, requireSession } from "@/lib/data";
+import { getSession, getViewedStore, requireSession } from "@/lib/data";
+import { adminEmails } from "@/lib/email";
+import { payoutRequestedEmail, storeLiveEmail } from "@/lib/email-templates";
+import { endOfDayInZone, money } from "@/lib/format";
+import { sendLater } from "@/lib/notify";
+import { isMissingSchema } from "@/lib/schema";
+import { siteUrl } from "@/lib/site";
 import { createClient } from "@/lib/supabase/server";
 import type { Product } from "@/lib/types";
 
@@ -85,7 +91,19 @@ export async function saveStore(_prev: FormState, formData: FormData): Promise<F
   }
 
   revalidateStore(slug);
-  return { ok: true, message: "Your store is live! Next, add your first product." };
+
+  if (fields.published) {
+    const site = await siteUrl();
+    sendLater({
+      to: session.profile.email,
+      ...storeLiveEmail({ name: session.profile.fullName, storeName: fields.name, storeUrl: `${site}/store/${slug}`, siteUrl: site })
+    });
+  }
+
+  return {
+    ok: true,
+    message: fields.published ? "Your store is live! Next, add your first product." : "Store created. Make it public when you're ready."
+  };
 }
 
 // ── Products (studio) ────────────────────────────────────────
@@ -156,5 +174,185 @@ export async function importProducts(input: Product[]): Promise<Result> {
   if (error) return { ok: false, error: "Import failed. Some products may belong to another store." };
 
   new Set(products.map(product => product.store)).forEach(revalidateStore);
+  return { ok: true };
+}
+
+// ── Digital delivery ─────────────────────────────────────────
+
+const MIGRATION_HINT = "This needs the latest database update (migration 004). Ask your site admin.";
+
+/** Points a product at a file already uploaded to the private product-files bucket (in the uploader's folder). */
+export async function attachProductFile(productId: string, storeSlug: string, path: string, fileName: string, sizeBytes: number): Promise<Result> {
+  const session = await getSession();
+  if (!session || !(await canManage(storeSlug))) return { ok: false, error: "You can only add files to your own products." };
+  if (!path.startsWith(`${session.profile.id}/`)) return { ok: false, error: "That upload doesn't belong to you." };
+
+  const supabase = await createClient();
+  const { data: previous, error: readError } = await supabase.from("product_files").select("path").eq("product_id", productId).maybeSingle();
+  if (isMissingSchema(readError)) return { ok: false, error: MIGRATION_HINT };
+
+  const { error } = await supabase.from("product_files").upsert({
+    product_id: productId,
+    path,
+    file_name: fileName.slice(0, 200),
+    size_bytes: Math.max(0, Math.round(sizeBytes)),
+    updated_at: new Date().toISOString()
+  });
+
+  if (error) return { ok: false, error: isMissingSchema(error) ? MIGRATION_HINT : "We couldn't attach that file. Please try again." };
+
+  // Replacing a file: tidy up the old one (best effort).
+  if (previous?.path && previous.path !== path) await supabase.storage.from("product-files").remove([previous.path]);
+  return { ok: true };
+}
+
+export async function removeProductFile(productId: string, storeSlug: string): Promise<Result> {
+  if (!(await canManage(storeSlug))) return { ok: false, error: "You can only change your own products." };
+
+  const supabase = await createClient();
+  const { data: file } = await supabase.from("product_files").select("path").eq("product_id", productId).maybeSingle();
+  const { error } = await supabase.from("product_files").delete().eq("product_id", productId);
+
+  if (error) return { ok: false, error: isMissingSchema(error) ? MIGRATION_HINT : "We couldn't remove that file." };
+  if (file?.path) await supabase.storage.from("product-files").remove([file.path]);
+  return { ok: true };
+}
+
+// ── Discount codes ───────────────────────────────────────────
+
+async function storeFor(formData: FormData) {
+  const session = await requireSession();
+  return getViewedStore(session, text(formData, "store", 40) || undefined);
+}
+
+export async function createDiscountCode(_prev: FormState, formData: FormData): Promise<FormState> {
+  const store = await storeFor(formData);
+  if (!store) return { error: "Create your store first." };
+
+  const code = text(formData, "code", 24).toUpperCase().replace(/\s+/g, "");
+  const percentOff = Math.round(Number(formData.get("percent_off")));
+  const maxUsesRaw = text(formData, "max_uses", 6);
+  const maxUses = maxUsesRaw ? Math.round(Number(maxUsesRaw)) : null;
+  const ends = text(formData, "expires", 10);
+  const expiresAt = ends ? endOfDayInZone(ends) : null;
+
+  if (!/^[A-Z0-9_-]{3,24}$/.test(code)) return { error: "Codes are 3 to 24 letters, numbers, dashes or underscores." };
+  if (!(percentOff >= 1 && percentOff <= 90)) return { error: "Choose a discount between 1% and 90%." };
+  if (maxUses !== null && !(maxUses >= 1)) return { error: "The use limit must be at least 1, or leave it blank." };
+  if (ends && !expiresAt) return { error: "Choose a valid end date." };
+  if (expiresAt && expiresAt < new Date()) return { error: "The end date is in the past." };
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("discount_codes").insert({
+    store_slug: store.slug,
+    code,
+    percent_off: percentOff,
+    max_uses: maxUses,
+    expires_at: expiresAt?.toISOString() ?? null
+  });
+
+  if (error) {
+    if (isMissingSchema(error)) return { error: MIGRATION_HINT };
+    return { error: error.code === "23505" ? `You already have a code called ${code}.` : "We couldn't create that code. Please try again." };
+  }
+
+  revalidatePath("/dashboard/promote");
+  return { ok: true, message: `${code} is live: ${percentOff}% off.` };
+}
+
+export async function setDiscountActive(id: string, storeSlug: string, active: boolean): Promise<Result> {
+  if (!(await canManage(storeSlug))) return { ok: false, error: "You can only change your own codes." };
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("discount_codes").update({ active }).eq("id", id).eq("store_slug", storeSlug);
+  if (error) return { ok: false, error: "We couldn't update that code." };
+
+  revalidatePath("/dashboard/promote");
+  return { ok: true };
+}
+
+export async function deleteDiscountCode(id: string, storeSlug: string): Promise<Result> {
+  if (!(await canManage(storeSlug))) return { ok: false, error: "You can only delete your own codes." };
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("discount_codes").delete().eq("id", id).eq("store_slug", storeSlug);
+  if (error) return { ok: false, error: "We couldn't delete that code." };
+
+  revalidatePath("/dashboard/promote");
+  return { ok: true };
+}
+
+// ── Payouts ──────────────────────────────────────────────────
+
+const PAYOUT_METHODS = ["", "paypal", "etransfer", "bank", "other"];
+
+export async function savePayoutSettings(_prev: FormState, formData: FormData): Promise<FormState> {
+  const session = await requireSession();
+  const method = text(formData, "payout_method", 20);
+  const details = text(formData, "payout_details", 500);
+
+  if (!PAYOUT_METHODS.includes(method)) return { error: "Choose how you'd like to be paid." };
+  if (method && !details) return { error: "Add the details we need to pay you, like your PayPal email." };
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("profiles")
+    .update({ payout_method: method, payout_details: details, email_notifications: formData.get("email_notifications") === "on" })
+    .eq("id", session.profile.id);
+
+  if (error) return { error: isMissingSchema(error) ? MIGRATION_HINT : "We couldn't save your payout details." };
+
+  revalidatePath("/dashboard", "layout");
+  return { ok: true, message: "Saved." };
+}
+
+const METHOD_LABELS: Record<string, string> = { paypal: "PayPal", etransfer: "Interac e-Transfer", bank: "bank transfer", other: "other" };
+
+export async function requestPayout(_prev: FormState, formData: FormData): Promise<FormState> {
+  const session = await requireSession();
+  if (!session.store) return { error: "Create your store first." };
+  if (!session.profile.payoutMethod) return { error: "First tell us how you'd like to be paid, below." };
+
+  const amount = Math.round(Number(formData.get("amount")) * 100) / 100;
+  if (!(amount > 0)) return { error: "Enter an amount." };
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("request_payout", {
+    p_store: session.store.slug,
+    p_amount: amount,
+    p_note: text(formData, "note", 500)
+  });
+
+  if (error) {
+    if (isMissingSchema(error)) return { error: MIGRATION_HINT };
+    // The database explains itself ("more than your available balance", "already have a request").
+    return { error: error.message || "We couldn't send that request." };
+  }
+
+  const site = await siteUrl();
+  const admins = adminEmails();
+  if (admins.length) {
+    sendLater({
+      to: admins,
+      ...payoutRequestedEmail({
+        storeName: session.store.name,
+        amount,
+        method: METHOD_LABELS[session.profile.payoutMethod] ?? "",
+        adminUrl: `${site}/admin/payouts`
+      })
+    });
+  }
+
+  revalidatePath("/dashboard", "layout");
+  return { ok: true, message: `Requested ${money(amount, 2)}. We'll email you when it's sent.` };
+}
+
+export async function cancelPayoutRequest(id: string): Promise<Result> {
+  await requireSession();
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("cancel_payout_request", { p_id: id });
+  if (error) return { ok: false, error: "We couldn't cancel that request." };
+
+  revalidatePath("/dashboard", "layout");
   return { ok: true };
 }

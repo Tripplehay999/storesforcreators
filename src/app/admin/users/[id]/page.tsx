@@ -287,6 +287,11 @@ export default async function AdminUserPage({ params }: Props) {
                   <small>Balance {money(balance.balance, 2)}</small>
                 </div>
                 <div className="adm-panel-body">
+                  <p className="adm-muted" style={{ marginBottom: 12 }}>
+                    {user.payoutMethod
+                      ? <>Pay via <strong>{user.payoutMethod}</strong>: {user.payoutDetails}</>
+                      : "They haven't added payout details yet."}
+                  </p>
                   <ActionForm action={createPayout} className="adm-form" confirm="Create this payout?">
                     <input type="hidden" name="store" value={balance.slug} />
                     <label>

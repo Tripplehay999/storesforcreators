@@ -59,66 +59,73 @@ export function rangeStart(range: Range, now = new Date()) {
   return calendarDay(today.year, today.month, today.day - SPANS[range].days * 2);
 }
 
-/** Totals for the range and the period before it, chart buckets, and top products. Refunds are excluded. */
-export function summarize(orders: Order[], range: Range, now = new Date()): RangeSummary {
+export type Period = "current" | "previous" | null;
+
+/**
+ * Bar labels for a range, plus a way to place any moment into "current" (with its bar) or the
+ * "previous" period of the same length. Days, weeks and months are counted in the business timezone.
+ */
+export function rangeFrame(range: Range, now = new Date()) {
   const today = zonedDate(now);
-  const current = empty();
-  const previous = empty();
-  const products = new Map<string, { name: string; orders: number; earnings: number }>();
-  let buckets: Bucket[];
-  let place: (order: Order) => "current" | "previous" | null;
-  let bucketOf: (order: Order) => number;
 
   if (range === "12m") {
-    const monthsAgo = (order: Order) => {
-      const date = zonedDate(order.createdAt);
+    const monthsAgo = (value: string | Date) => {
+      const date = zonedDate(value);
       return (today.year - date.year) * 12 + today.month - date.month;
     };
 
-    buckets = Array.from({ length: 12 }, (_, index) => {
-      const date = new Date(Date.UTC(today.year, today.month - 11 + index, 1));
-      const month = date.getUTCMonth();
-      return { ...empty(), label: MONTHS[month], tooltip: `${MONTHS_LONG[month]} ${date.getUTCFullYear()}` };
-    });
-    place = order => {
-      const ago = monthsAgo(order);
-      return ago < 0 ? null : ago < 12 ? "current" : ago < 24 ? "previous" : null;
+    return {
+      labels: Array.from({ length: 12 }, (_, index) => {
+        const date = new Date(Date.UTC(today.year, today.month - 11 + index, 1));
+        const month = date.getUTCMonth();
+        return { label: MONTHS[month], tooltip: `${MONTHS_LONG[month]} ${date.getUTCFullYear()}` };
+      }),
+      locate(value: string | Date): { period: Period; bucket: number } {
+        const ago = monthsAgo(value);
+        const period: Period = ago < 0 ? null : ago < 12 ? "current" : ago < 24 ? "previous" : null;
+        return { period, bucket: 11 - ago };
+      }
     };
-    bucketOf = order => 11 - monthsAgo(order);
-  } else {
-    const { days, perBucket } = SPANS[range];
-    const count = days / perBucket;
-    const todayNumber = dayNumber(now);
-    const daysAgo = (order: Order) => todayNumber - dayNumber(order.createdAt);
-    const dayAt = (ago: number) => calendarDay(today.year, today.month, today.day - ago);
+  }
 
-    buckets = Array.from({ length: count }, (_, index) => {
+  const { days, perBucket } = SPANS[range];
+  const count = days / perBucket;
+  const todayNumber = dayNumber(now);
+  const dayAt = (ago: number) => calendarDay(today.year, today.month, today.day - ago);
+
+  return {
+    labels: Array.from({ length: count }, (_, index) => {
       const lastAgo = (count - 1 - index) * perBucket;
       const first = dayAt(lastAgo + perBucket - 1);
       const label = shortDate(first);
-      return {
-        ...empty(),
-        label,
-        tooltip: perBucket === 1 ? shortDate(first, true) : `${label} – ${shortDate(dayAt(lastAgo))}`
-      };
-    });
-    place = order => {
-      const ago = daysAgo(order);
-      return ago < 0 ? null : ago < days ? "current" : ago < days * 2 ? "previous" : null;
-    };
-    bucketOf = order => count - 1 - Math.floor(daysAgo(order) / perBucket);
-  }
+      return { label, tooltip: perBucket === 1 ? shortDate(first, true) : `${label} – ${shortDate(dayAt(lastAgo))}` };
+    }),
+    locate(value: string | Date): { period: Period; bucket: number } {
+      const ago = todayNumber - dayNumber(value);
+      const period: Period = ago < 0 ? null : ago < days ? "current" : ago < days * 2 ? "previous" : null;
+      return { period, bucket: count - 1 - Math.floor(ago / perBucket) };
+    }
+  };
+}
+
+/** Totals for the range and the period before it, chart buckets, and top products. Refunds are excluded. */
+export function summarize(orders: Order[], range: Range, now = new Date()): RangeSummary {
+  const frame = rangeFrame(range, now);
+  const current = empty();
+  const previous = empty();
+  const products = new Map<string, { name: string; orders: number; earnings: number }>();
+  const buckets: Bucket[] = frame.labels.map(label => ({ ...empty(), ...label }));
 
   orders
     .filter(order => order.status === "completed")
     .forEach(order => {
-      const period = place(order);
+      const { period, bucket } = frame.locate(order.createdAt);
 
       if (period === "previous") add(previous, order);
       if (period !== "current") return;
 
       add(current, order);
-      add(buckets[bucketOf(order)], order);
+      add(buckets[bucket], order);
 
       const key = order.productId ?? order.productName;
       const product = products.get(key) ?? { name: order.productName, orders: 0, earnings: 0 };

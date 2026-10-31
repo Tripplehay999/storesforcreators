@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Confirm your new email</title></head>
+<body style="margin:0;padding:0;background:#f4f1ea;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#1c1722;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f1ea;padding:32px 12px;">
+    <tr><td align="center">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border:2px solid #1c1722;border-radius:18px;overflow:hidden;">
+        <tr><td style="background:#d4f57a;padding:18px 28px;border-bottom:2px solid #1c1722;">
+          <span style="display:inline-block;width:34px;height:34px;line-height:34px;text-align:center;border-radius:9px;background:#1c1722;color:#d4f57a;font-weight:800;font-size:12px;vertical-align:middle;">SFC</span>
+          <span style="margin-left:10px;font-weight:800;font-size:15px;vertical-align:middle;">Stores for Creators</span>
+        </td></tr>
+        <tr><td style="padding:30px 28px 26px;">
+          <p style="margin:0 0 14px;font-size:24px;line-height:1.25;font-weight:800;">Confirm your new email</p>
+          <p style="margin:0 0 22px;font-size:15px;line-height:1.6;color:#3c3542;">Tap the button to change your account email from {{ .Email }} to {{ .NewEmail }}.</p>
+          <a href="{{ .SiteURL }}/auth/callback?token_hash={{ .TokenHash }}&type=email_change&next=%2Fdashboard%2Fstore" style="display:inline-block;padding:14px 26px;border-radius:12px;background:#1c1722;color:#d4f57a;font-weight:800;font-size:15px;text-decoration:none;">Confirm new email</a>
+          <p style="margin:22px 0 0;font-size:13px;line-height:1.6;color:#7a7180;">If you didn't ask for this, ignore this email and your address stays the same.</p>
+        </td></tr>
+        <tr><td style="padding:16px 28px 22px;border-top:1px solid #ece7df;font-size:12px;line-height:1.5;color:#7a7180;">
+          Didn't ask for this? You can ignore this email; nothing changes until the link is used.<br>
+          Stores for Creators · Online stores for creators, designed and run for you.
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>

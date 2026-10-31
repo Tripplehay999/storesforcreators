@@ -2,8 +2,10 @@ import Link from "next/link";
 import ActionForm from "@/components/admin/ActionForm";
 import { getPayouts, getStoreBalances } from "@/lib/admin-data";
 import { money, shortDate } from "@/lib/format";
-import { createPayout, setPayoutStatus } from "../actions";
+import { createPayout, resolvePayoutRequest, setPayoutStatus } from "../actions";
 import { adminOnly } from "@/lib/data";
+import { getPayoutRequests } from "@/lib/growth-data";
+import { createClient } from "@/lib/supabase/server";
 
 type Props = { searchParams: Promise<{ status?: string }> };
 
@@ -12,7 +14,21 @@ const STATUS_PILL = { pending: "amber", paid: "green", cancelled: "" } as const;
 export default async function AdminPayoutsPage({ searchParams }: Props) {
   await adminOnly();
   const { status } = await searchParams;
-  const [stores, payouts] = await Promise.all([getStoreBalances(), getPayouts({ status: status || undefined })]);
+  const [stores, payouts, requests] = await Promise.all([
+    getStoreBalances(),
+    getPayouts({ status: status || undefined }),
+    getPayoutRequests()
+  ]);
+
+  // Where each requesting creator wants their money (admins can read profiles).
+  const ownerIds = stores.filter(store => requests.requests.some(request => request.storeSlug === store.slug)).map(store => store.ownerId).filter(Boolean) as string[];
+  const { data: owners } = ownerIds.length
+    ? await (await createClient()).from("profiles").select("*").in("id", ownerIds)
+    : { data: [] };
+  const payoutInfo = new Map(stores.map(store => {
+    const owner = owners?.find(profile => profile.id === store.ownerId);
+    return [store.slug, { method: owner?.payout_method ?? "", details: owner?.payout_details ?? "", name: owner?.full_name || owner?.email || "" }];
+  }));
 
   const storeName = new Map(stores.map(store => [store.slug, store.name]));
   const owing = stores.filter(store => store.balance > 0).sort((a, b) => b.balance - a.balance);
@@ -50,6 +66,55 @@ export default async function AdminPayoutsPage({ searchParams }: Props) {
           <span>Across every store</span>
         </div>
       </div>
+
+      {requests.requests.length > 0 && (
+        <section className="adm-panel">
+          <div className="adm-panel-head">
+            <h2>Payout requests</h2>
+            <small>{requests.requests.length} waiting</small>
+          </div>
+          <div className="adm-table-wrap">
+            <table className="adm-table">
+              <thead>
+                <tr><th>Store</th><th>Requested</th><th className="num">Amount</th><th>Pay to</th><th>Action</th></tr>
+              </thead>
+              <tbody>
+                {requests.requests.map(request => {
+                  const info = payoutInfo.get(request.storeSlug);
+                  return (
+                    <tr key={request.id}>
+                      <td>
+                        {storeName.get(request.storeSlug) ?? request.storeSlug}
+                        {info?.name && <span className="adm-sub">{info.name}</span>}
+                        {request.note && <span className="adm-sub">“{request.note}”</span>}
+                      </td>
+                      <td className="adm-mono">{shortDate(request.createdAt, true)}</td>
+                      <td className="num">{money(request.amount, 2)}</td>
+                      <td>
+                        {info?.method ? <><strong>{info.method}</strong><span className="adm-sub">{info.details}</span></> : <span className="adm-muted">Not set</span>}
+                      </td>
+                      <td>
+                        <ActionForm action={resolvePayoutRequest} className="adm-row-actions" confirm={`Mark ${money(request.amount, 2)} as paid to ${storeName.get(request.storeSlug) ?? request.storeSlug}?`}>
+                          <input type="hidden" name="id" value={request.id} />
+                          <input type="hidden" name="decision" value="pay" />
+                          <input className="adm-input adm-input-sm" name="method" defaultValue={info?.method ?? ""} placeholder="Method" />
+                          <input className="adm-input adm-input-sm" name="reference" placeholder="Reference" />
+                          <button className="adm-btn adm-btn-sm adm-btn-primary" type="submit">Pay</button>
+                        </ActionForm>
+                        <ActionForm action={resolvePayoutRequest} confirm="Decline this payout request?">
+                          <input type="hidden" name="id" value={request.id} />
+                          <input type="hidden" name="decision" value="decline" />
+                          <button className="adm-btn adm-btn-sm adm-btn-ghost" type="submit">Decline</button>
+                        </ActionForm>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
 
       <section className="adm-panel">
         <div className="adm-panel-head">

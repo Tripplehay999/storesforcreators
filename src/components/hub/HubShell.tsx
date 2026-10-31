@@ -1,12 +1,18 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import HubNav from "@/components/HubNav";
+import type { HubTheme } from "@/lib/theme";
 import type { Profile, Store } from "@/lib/types";
+import HubTour from "./HubTour";
 import Icon from "./Icon";
+import ThemeToggle from "./ThemeToggle";
+import TourButton from "./TourButton";
 import "@/app/dashboard/hub.css";
 
+type Props = { profile: Profile; store: Store | null; theme: HubTheme; children: React.ReactNode };
+
 /** The creator hub frame: sidebar on desktop, top bar and bottom tabs on phones. */
-export default function HubShell({ profile, store, children }: { profile: Profile; store: Store | null; children: React.ReactNode }) {
+export default function HubShell({ profile, store, theme, children }: Props) {
   const name = profile.fullName || "Creator";
   const initial = (profile.fullName || profile.email).trim().charAt(0).toUpperCase();
   // Only active admins see the way into the admin panel.
@@ -21,11 +27,16 @@ export default function HubShell({ profile, store, children }: { profile: Profil
           <small>{profile.email}</small>
         </div>
       </div>
+      <ThemeToggle initial={theme} />
+      <Link className="app-menu-item only-phone" href="/dashboard/store">
+        <Icon name="store" size={16} /> Storefront &amp; account
+      </Link>
       {isAdmin && (
         <Link className="app-menu-item" href="/admin">
           <Icon name="shield" size={16} /> Admin panel
         </Link>
       )}
+      <TourButton />
       <Link className="app-menu-item" href="/reset-password">
         <Icon name="key" size={16} /> Change password
       </Link>
@@ -38,7 +49,7 @@ export default function HubShell({ profile, store, children }: { profile: Profil
   );
 
   return (
-    <div className="app">
+    <div className="app" data-theme={theme}>
       <aside className="app-sidebar">
         <Link className="app-logo" href="/">
           <span className="app-logo-mark">SFC</span>
@@ -70,12 +81,12 @@ export default function HubShell({ profile, store, children }: { profile: Profil
         </Suspense>
 
         {store && (
-          <a className="app-nav-external" href={`/store/${store.slug}`} target="_blank" rel="noreferrer">
+          <a className="app-nav-external" href={`/store/${store.slug}`} target="_blank" rel="noreferrer" data-tour="view-store">
             <Icon name="external" size={16} /> View storefront
           </a>
         )}
 
-        <div className="app-sidebar-foot">{account}</div>
+        <div className="app-sidebar-foot" data-tour="account">{account}</div>
       </aside>
 
       <header className="app-topbar">
@@ -86,11 +97,18 @@ export default function HubShell({ profile, store, children }: { profile: Profil
 
         <div className="app-topbar-actions">
           {store && (
-            <a className="app-icon-button" href={`/store/${store.slug}`} target="_blank" rel="noreferrer" aria-label="View storefront">
+            <a
+              className="app-icon-button"
+              href={`/store/${store.slug}`}
+              target="_blank"
+              rel="noreferrer"
+              aria-label="View storefront"
+              data-tour="view-store"
+            >
               <Icon name="external" size={18} />
             </a>
           )}
-          <details className="app-account-menu">
+          <details className="app-account-menu" data-tour="account">
             <summary aria-label="Account menu">
               <span className="app-avatar">{initial}</span>
             </summary>
@@ -106,6 +124,8 @@ export default function HubShell({ profile, store, children }: { profile: Profil
       <Suspense>
         <HubNav variant="tabs" />
       </Suspense>
+
+      <HubTour />
     </div>
   );
 }

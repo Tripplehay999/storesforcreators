@@ -1,8 +1,10 @@
 import Link from "next/link";
 import type { Adjustment, Payout, StoreBalance } from "@/lib/admin-data";
 import { money, number, shortDate } from "@/lib/format";
-import type { Order, Store } from "@/lib/types";
+import type { PayoutRequest } from "@/lib/growth-data";
+import type { Order, Profile, Store } from "@/lib/types";
 import Icon from "./Icon";
+import { PayoutRequestCard, PayoutSettingsCard } from "./PayoutCards";
 import { AdminBanner, Empty, OrderRows, PageHeader, StatCard } from "./ui";
 
 export type EarningsProps = {
@@ -16,6 +18,9 @@ export type EarningsProps = {
   balance: StoreBalance | null;
   payouts: Payout[];
   adjustments: Adjustment[];
+  profile: Profile;
+  /** Null until migration 004 has been run. */
+  payoutRequests: PayoutRequest[] | null;
 };
 
 const FILTERS: [Order["status"] | undefined, string][] = [
@@ -25,8 +30,10 @@ const FILTERS: [Order["status"] | undefined, string][] = [
 ];
 
 export default function EarningsView({
-  store, isOwnStore, status, page, pageSize, orders, total, balance, payouts, adjustments
+  store, isOwnStore, status, page, pageSize, orders, total, balance, payouts, adjustments, profile, payoutRequests
 }: EarningsProps) {
+  const openRequest = payoutRequests?.find(request => request.status === "open") ?? null;
+  const showPayoutTools = isOwnStore && payoutRequests !== null;
   const pages = Math.max(1, Math.ceil(total / pageSize));
   const href = (next: { status?: string; page?: number }) => {
     const values = { store: isOwnStore ? undefined : store.slug, status, ...next };
@@ -82,7 +89,7 @@ export default function EarningsView({
         <StatCard
           label="Lifetime earnings"
           value={money(lifetime, 2)}
-          hint={`${number(balance?.orderCount ?? 0)} orders · ${store.revenueShare}% share`}
+          hint={`${number(balance?.orderCount ?? 0)} orders · ${balance?.revenueShare ?? 0}% share`}
         />
       </div>
 
@@ -135,6 +142,15 @@ export default function EarningsView({
           )}
         </section>
 
+        <div className="stack">
+        {showPayoutTools && (
+          <PayoutRequestCard
+            available={Math.max(0, balance?.balance ?? 0)}
+            openRequest={openRequest}
+            hasMethod={Boolean(profile.payoutMethod)}
+          />
+        )}
+
         <section className="card card-flush">
           <div className="card-head">
             <h2>Payouts &amp; adjustments</h2>
@@ -161,6 +177,9 @@ export default function EarningsView({
             </ul>
           )}
         </section>
+
+        {showPayoutTools && <PayoutSettingsCard profile={profile} />}
+        </div>
       </div>
     </>
   );

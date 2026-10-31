@@ -3,13 +3,15 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
-import { deleteProduct, importProducts, saveProduct } from "@/app/dashboard/actions";
+import { attachProductFile, deleteProduct, importProducts, removeProductFile, saveProduct } from "@/app/dashboard/actions";
 import Icon from "@/components/hub/Icon";
 import { Empty } from "@/components/hub/ui";
 import { newProductId, normalizeProduct, productImage, productPrice, safeImage } from "@/lib/catalog";
 import { toast } from "@/lib/ui";
-import { uploadImage } from "@/lib/upload";
+import { uploadImage, uploadProductFile } from "@/lib/upload";
 import type { Product } from "@/lib/types";
+
+type DeliveryFile = { fileName: string; sizeBytes: number };
 
 type Props = {
   initialProducts: Product[];
@@ -17,7 +19,14 @@ type Props = {
   initialId?: string;
   ownStore: string | null;
   userId: string;
+  /** Downloadable files by product id; null until migration 004 has been run. */
+  initialFiles: Record<string, DeliveryFile> | null;
 };
+
+function fileSize(bytes: number) {
+  if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`;
+  return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+}
 
 function blankProduct(store: string): Product {
   return normalizeProduct({
@@ -62,7 +71,7 @@ function Preview({ product }: { product: Product }) {
   );
 }
 
-export default function Studio({ initialProducts, stores, initialId, ownStore, userId }: Props) {
+export default function Studio({ initialProducts, stores, initialId, ownStore, userId, initialFiles }: Props) {
   const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
   const importRef = useRef<HTMLInputElement>(null);
@@ -83,6 +92,8 @@ export default function Studio({ initialProducts, stores, initialId, ownStore, u
   // Phones show one pane at a time; desktop shows both.
   const [pane, setPane] = useState<"list" | "editor">(initialId ? "editor" : "list");
   const [tab, setTab] = useState<"edit" | "preview">("edit");
+  const [files, setFiles] = useState(initialFiles ?? {});
+  const fileRef = useRef<HTMLInputElement>(null);
 
   function select(id: string, list = products) {
     const product = list.find(item => item.id === id) ?? null;
@@ -242,6 +253,44 @@ export default function Studio({ initialProducts, stores, initialId, ownStore, u
 
     toast("Product catalog imported.");
     window.location.reload();
+  }
+
+  async function onDeliveryFile(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file || !draft) return;
+
+    setBusy(true);
+    try {
+      const uploaded = await uploadProductFile(file, userId, draft.id);
+      const result = await attachProductFile(draft.id, draft.store, uploaded.path, uploaded.fileName, uploaded.sizeBytes);
+      if (!result.ok) throw new Error(result.error);
+      setFiles(current => ({ ...current, [draft.id]: { fileName: uploaded.fileName, sizeBytes: uploaded.sizeBytes } }));
+      toast("File attached. Buyers get it straight after paying.");
+    } catch (error) {
+      toast((error as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function onRemoveFile() {
+    if (!draft || !confirm("Remove this file? Buyers of this product won't get a download until you add one again.")) return;
+
+    setBusy(true);
+    const result = await removeProductFile(draft.id, draft.store);
+    setBusy(false);
+
+    if (!result.ok) {
+      toast(result.error);
+      return;
+    }
+    setFiles(current => {
+      const next = { ...current };
+      delete next[draft.id];
+      return next;
+    });
+    toast("File removed.");
   }
 
   async function onUpload(event: React.ChangeEvent<HTMLInputElement>) {
@@ -448,6 +497,39 @@ export default function Studio({ initialProducts, stores, initialId, ownStore, u
                   Gallery images
                   <textarea name="gallery" rows={3} defaultValue={draft.gallery.join("\n")} placeholder="One image link per line" />
                 </label>
+              </div>
+
+              <div className="form-section">
+                <div className="form-section-head">
+                  <h2>What buyers get</h2>
+                  <p>The file buyers download after paying. Leave it empty for services like coaching.</p>
+                </div>
+
+                <div className="field full">
+                  {initialFiles === null ? (
+                    <p className="field-hint">File delivery needs the latest database update (migration 004).</p>
+                  ) : files[draft.id] ? (
+                    <div className="delivery-file">
+                      <span className="media-thumb"><Icon name="file" size={22} /></span>
+                      <div>
+                        <strong>{files[draft.id].fileName}</strong>
+                        <span className="field-hint">{fileSize(files[draft.id].sizeBytes)} · private, delivered after payment</span>
+                      </div>
+                      <div className="delivery-actions">
+                        <button className="btn btn-secondary btn-sm" type="button" onClick={() => fileRef.current?.click()} disabled={busy}>Replace</button>
+                        <button className="btn btn-ghost btn-sm btn-danger" type="button" onClick={onRemoveFile} disabled={busy}>Remove</button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="delivery-empty">
+                      <button className="btn btn-secondary btn-sm" type="button" onClick={() => fileRef.current?.click()} disabled={busy}>
+                        <Icon name="upload" size={14} /> {busy ? "Working…" : "Upload file"}
+                      </button>
+                      <span className="field-hint">PDF, ZIP, images, anything up to 50 MB.</span>
+                    </div>
+                  )}
+                  <input ref={fileRef} type="file" hidden onChange={onDeliveryFile} />
+                </div>
               </div>
 
               <div className="form-section">

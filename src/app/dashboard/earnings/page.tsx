@@ -3,6 +3,7 @@ import EarningsView from "@/components/hub/EarningsView";
 import { Empty, PageHeader } from "@/components/hub/ui";
 import { getAdjustments, getPayouts, getStoreBalance } from "@/lib/admin-data";
 import { getOrderPage, getViewedStore, requireSession } from "@/lib/data";
+import { getPayoutRequests } from "@/lib/growth-data";
 
 type Props = {
   searchParams: Promise<{ status?: string; page?: string; store?: string }>;
@@ -32,11 +33,12 @@ export default async function EarningsPage({ searchParams }: Props) {
   const status = params.status === "completed" || params.status === "refunded" ? params.status : undefined;
   const page = Math.max(1, Math.floor(Number(params.page)) || 1);
 
-  const [orderPage, balance, payouts, adjustments] = await Promise.all([
+  const [orderPage, balance, payouts, adjustments, requests] = await Promise.all([
     getOrderPage(store.slug, { status, page, pageSize: PAGE_SIZE }),
     getStoreBalance(store.slug),
     getPayouts({ store: store.slug }),
-    getAdjustments(store.slug)
+    getAdjustments(store.slug),
+    getPayoutRequests(store.slug)
   ]);
 
   return (
@@ -51,6 +53,8 @@ export default async function EarningsPage({ searchParams }: Props) {
       balance={balance}
       payouts={payouts}
       adjustments={adjustments}
+      profile={session.profile}
+      payoutRequests={requests.ready ? requests.requests : null}
     />
   );
 }

@@ -31,6 +31,9 @@ export type AdminUser = {
   suspended: boolean;
   createdAt: string;
   store: { slug: string; name: string } | null;
+  /** Where the creator wants to be paid (empty until they set it; needs migration 004). */
+  payoutMethod: string;
+  payoutDetails: string;
 };
 
 export type Adjustment = {
@@ -150,7 +153,9 @@ function rowToUser(row: any): AdminUser {
     role: row.role,
     suspended: Boolean(row.suspended),
     createdAt: row.created_at,
-    store: store ? { slug: store.slug, name: store.name } : null
+    store: store ? { slug: store.slug, name: store.name } : null,
+    payoutMethod: row.payout_method ?? "",
+    payoutDetails: row.payout_details ?? ""
   };
 }
 

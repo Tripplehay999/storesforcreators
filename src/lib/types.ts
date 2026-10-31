@@ -12,7 +12,6 @@ export type Store = {
   label: string;
   background: string;
   featuredProductId: string | null;
-  revenueShare: number;
   isDemo: boolean;
   published: boolean;
 };
@@ -54,6 +53,10 @@ export type Profile = {
   socialHandle: string;
   role: "creator" | "admin";
   suspended: boolean;
+  /** How the creator wants to be paid; empty until set (needs migration 004). */
+  payoutMethod: "" | "paypal" | "etransfer" | "bank" | "other";
+  payoutDetails: string;
+  emailNotifications: boolean;
 };
 
 export type Application = {

@@ -45,3 +45,28 @@ export function shortDate(value: string | Date, withYear = false) {
     ...(withYear ? { year: "numeric" } : {})
   });
 }
+
+/** How far TIME_ZONE is ahead of UTC at a given moment, in milliseconds. */
+function zoneOffset(at: Date) {
+  const parts = Object.fromEntries(
+    new Intl.DateTimeFormat("en-US", {
+      timeZone: TIME_ZONE,
+      hourCycle: "h23",
+      year: "numeric",
+      month: "numeric",
+      day: "numeric",
+      hour: "numeric",
+      minute: "numeric",
+      second: "numeric"
+    }).formatToParts(at).map(part => [part.type, Number(part.value)])
+  );
+  return Date.UTC(parts.year, parts.month - 1, parts.day, parts.hour, parts.minute, parts.second) - at.getTime();
+}
+
+/** 23:59:59 on a "YYYY-MM-DD" date in TIME_ZONE, e.g. for "ends on" dates. Null if the date is invalid. */
+export function endOfDayInZone(date: string) {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date);
+  if (!match) return null;
+  const guess = Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3]), 23, 59, 59);
+  return new Date(guess - zoneOffset(new Date(guess)));
+}

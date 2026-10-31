@@ -1,10 +1,13 @@
 import Link from "next/link";
 import type { StoreBalance } from "@/lib/admin-data";
-import { money, number, TIME_ZONE } from "@/lib/format";
+import type { Recommendations } from "@/lib/ai";
+import { money, number } from "@/lib/format";
+import { greeting } from "@/lib/greeting";
 import { change, RANGES, type Range, type RangeSummary } from "@/lib/stats";
 import type { Order, Product, Store } from "@/lib/types";
-import EarningsChart from "./EarningsChart";
+import BarChart from "./BarChart";
 import Icon from "./Icon";
+import IdeasCard from "./IdeasCard";
 import { AdminBanner, Empty, OrderRows, PageHeader, StatCard } from "./ui";
 
 export type OverviewProps = {
@@ -17,12 +20,14 @@ export type OverviewProps = {
   recentOrders: Order[];
   products: Product[];
   now?: Date;
+  /** AI ideas: shown when switched on; `adminHint` explains setup to admins when it isn't. */
+  ai: { enabled: boolean; initial: { payload: Recommendations; createdAt: string } | null; adminHint: string | null };
 };
 
-function greeting(now: Date) {
-  const hour = Number(new Intl.DateTimeFormat("en-US", { timeZone: TIME_ZONE, hour: "numeric", hourCycle: "h23" }).format(now));
-  return hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
-}
+const CHART_METRICS = [
+  { key: "earnings", label: "Your earnings", unit: "earned", kind: "money" as const },
+  { key: "orders", label: "Orders", unit: "orders", kind: "count" as const }
+];
 
 function Checklist({ store, products, balance, storeQuery }: {
   store: Store;
@@ -66,7 +71,7 @@ function Checklist({ store, products, balance, storeQuery }: {
 }
 
 export default function OverviewView({
-  store, firstName, isOwnStore, range, summary, balance, recentOrders, products, now = new Date()
+  store, firstName, isOwnStore, range, summary, balance, recentOrders, products, now = new Date(), ai
 }: OverviewProps) {
   const storeQuery = isOwnStore ? "" : `?store=${encodeURIComponent(store.slug)}`;
   const withRange = (value: Range) =>
@@ -82,10 +87,10 @@ export default function OverviewView({
       {!isOwnStore && <AdminBanner storeName={store.name} back="/admin/stores" />}
 
       <PageHeader
-        title={isOwnStore ? `${greeting(now)}, ${firstName}` : store.name}
+        title={isOwnStore ? greeting(firstName, now) : store.name}
         description={<>Here&apos;s how your store did over the {rangeInfo.long.toLowerCase()}.</>}
       >
-        <nav className="segmented" aria-label="Date range">
+        <nav className="segmented" aria-label="Date range" data-tour="range">
           {RANGES.map(item => (
             <Link
               key={item.value}
@@ -113,11 +118,18 @@ export default function OverviewView({
             <h2>Performance</h2>
             <span className="muted">Completed orders · refunds excluded</span>
           </div>
-          <EarningsChart buckets={summary.buckets} />
+          <BarChart
+            metrics={CHART_METRICS}
+            buckets={summary.buckets.map(bucket => ({
+              label: bucket.label,
+              tooltip: bucket.tooltip,
+              values: { earnings: bucket.earnings, orders: bucket.orders }
+            }))}
+          />
         </section>
 
         <div className="stack">
-          <section className="card balance-card">
+          <section className="card balance-card" data-tour="balance">
             <div className="card-head">
               <h2>Balance</h2>
               <Link className="link" href={`/dashboard/earnings${storeQuery}`}>Payouts</Link>
@@ -129,13 +141,22 @@ export default function OverviewView({
             <dl className="balance-rows">
               <div><dt>On its way</dt><dd>{money(balance?.pendingPayouts ?? 0, 2)}</dd></div>
               <div><dt>Paid out to date</dt><dd>{money(balance?.paidOut ?? 0, 2)}</dd></div>
-              <div><dt>Your revenue share</dt><dd>{store.revenueShare}%</dd></div>
+              <div><dt>Your revenue share</dt><dd>{balance?.revenueShare ?? 0}%</dd></div>
             </dl>
           </section>
 
           <Checklist store={store} products={products} balance={balance} storeQuery={storeQuery} />
         </div>
       </div>
+
+      {ai.enabled ? (
+        <IdeasCard viewingStore={isOwnStore ? undefined : store.slug} initial={ai.initial} />
+      ) : ai.adminHint ? (
+        <section className="card ideas ideas-setup">
+          <h2 className="ideas-title"><Icon name="sparkles" size={18} /> AI ideas are off</h2>
+          <p className="muted">{ai.adminHint}</p>
+        </section>
+      ) : null}
 
       <div className="grid-main">
         <section className="card card-flush">

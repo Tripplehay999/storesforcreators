@@ -1654,3 +1654,132 @@ input[type="range"]::-moz-range-thumb {
   font-size: 16px;
 }
 
+
+/* Spam honeypot on the apply form: off-screen for people, still visible to naive bots. */
+.hp-field {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+/* Order confirmation and download pages */
+
+.order-page {
+  display: grid;
+  place-items: center;
+  min-height: calc(100vh - 82px);
+  padding: 48px 20px;
+  background: #fbf8f2;
+}
+
+.order-card {
+  display: grid;
+  justify-items: center;
+  gap: 14px;
+  width: min(100%, 480px);
+  padding: 40px 32px;
+  border: 2.5px solid #1c1722;
+  border-radius: 24px;
+  background: #fff;
+  box-shadow: 6px 6px 0 #1c1722;
+  text-align: center;
+}
+
+.order-card h1 {
+  margin: 0;
+  font-size: clamp(26px, 4vw, 34px);
+  letter-spacing: -.04em;
+  line-height: 1.1;
+}
+
+.order-card p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.order-card p strong {
+  color: var(--ink);
+}
+
+.order-badge {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  border: 2.5px solid #1c1722;
+  border-radius: 18px;
+  background: #d4f57a;
+  box-shadow: 4px 4px 0 #1c1722;
+  font-size: 28px;
+  font-weight: 800;
+  transform: rotate(-4deg);
+}
+
+.order-lead {
+  color: var(--ink) !important;
+  font-weight: 700;
+}
+
+.order-error {
+  color: #b3261e !important;
+  font-weight: 600;
+}
+
+.order-home {
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* Buy form on product pages */
+
+.buy-form {
+  display: grid;
+  gap: 12px;
+  margin: 8px 0 4px;
+}
+
+.buy-form .btn {
+  width: 100%;
+}
+
+.buy-code summary {
+  width: fit-content;
+  color: var(--purple-dark);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.buy-code input {
+  width: 100%;
+  margin-top: 10px;
+  padding: 12px 14px;
+  border: 1.5px solid #d8cfdc;
+  border-radius: 10px;
+  background: #fff;
+  font: 600 15px var(--sans);
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.buy-error {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #fdecea;
+  color: #b3261e;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.buy-note {
+  color: var(--muted);
+  font-size: 12px;
+}

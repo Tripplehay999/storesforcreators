@@ -2,7 +2,7 @@ import "server-only";
 
 import { cache } from "react";
 import { notFound, redirect } from "next/navigation";
-import { rowToProduct, rowToStore, seedProducts, seedStores } from "./catalog";
+import { rowToProduct, rowToStore, seedProducts, seedStores, STORE_COLUMNS } from "./catalog";
 import { createClient, isSupabaseConfigured } from "./supabase/server";
 import type { Application, Order, Product, Profile, Store } from "./types";
 
@@ -14,7 +14,7 @@ export const getStores = cache(async (): Promise<Store[]> => {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("stores")
-    .select("*")
+    .select(STORE_COLUMNS)
     .eq("published", true)
     .order("created_at");
 
@@ -26,7 +26,7 @@ export const getStore = cache(async (slug: string): Promise<Store | null> => {
   if (!isSupabaseConfigured()) return seedStores.find(store => store.slug === slug) ?? null;
 
   const supabase = await createClient();
-  const { data } = await supabase.from("stores").select("*").eq("slug", slug).maybeSingle();
+  const { data } = await supabase.from("stores").select(STORE_COLUMNS).eq("slug", slug).maybeSingle();
 
   return data ? rowToStore(data) : null;
 });
@@ -73,7 +73,7 @@ export const getSession = cache(async (): Promise<Session | null> => {
 
   const [{ data: profile }, { data: store }] = await Promise.all([
     supabase.from("profiles").select("*").eq("id", user.id).maybeSingle(),
-    supabase.from("stores").select("*").eq("owner_id", user.id).maybeSingle()
+    supabase.from("stores").select(STORE_COLUMNS).eq("owner_id", user.id).maybeSingle()
   ]);
 
   return {
@@ -83,7 +83,10 @@ export const getSession = cache(async (): Promise<Session | null> => {
       fullName: profile?.full_name ?? "",
       socialHandle: profile?.social_handle ?? "",
       role: profile?.role === "admin" ? "admin" : "creator",
-      suspended: Boolean(profile?.suspended)
+      suspended: Boolean(profile?.suspended),
+      payoutMethod: profile?.payout_method ?? "",
+      payoutDetails: profile?.payout_details ?? "",
+      emailNotifications: profile?.email_notifications !== false
     },
     store: store ? rowToStore(store) : null
   };

@@ -1,11 +1,14 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { getStoreBalance } from "@/lib/admin-data";
 import { requireAdmin } from "@/lib/data";
 import { money } from "@/lib/format";
+import { siteUrl } from "@/lib/site";
+import { applicationDecisionEmail, newSaleEmail, payoutSentEmail } from "@/lib/email-templates";
+import { sendLater, storeOwnerContact } from "@/lib/notify";
+import { isMissingSchema } from "@/lib/schema";
 import { createServiceClient, hasServiceRole } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
@@ -113,14 +116,14 @@ export async function recordOrder(_prev: AdminState, formData: FormData): Promis
   const supabase = await createClient();
   const { data: product } = await supabase
     .from("products")
-    .select("id, name, store_slug, stores(revenue_share)")
+    .select("id, name, store_slug")
     .eq("id", productId)
     .maybeSingle();
 
   if (!product) return { error: "Choose a product." };
 
-  const store = Array.isArray(product.stores) ? product.stores[0] : product.stores;
-  const share = Number(store?.revenue_share ?? 50);
+  const balance = await getStoreBalance(product.store_slug);
+  const share = balance?.revenueShare ?? 50;
 
   const { error } = await supabase.from("orders").insert({
     store_slug: product.store_slug,
@@ -132,6 +135,24 @@ export async function recordOrder(_prev: AdminState, formData: FormData): Promis
   });
 
   if (error) return { error: "Couldn't record that order." };
+
+  const site = await siteUrl();
+  const creatorAmount = Math.round(amount * share) / 100;
+  sendLater(async () => {
+    const owner = await storeOwnerContact(supabase, product.store_slug);
+    if (!owner?.wantsEmail) return null;
+    return {
+      to: owner.email,
+      ...newSaleEmail({
+        name: owner.name,
+        storeName: balance?.name ?? product.store_slug,
+        productName: product.name,
+        amount,
+        share: creatorAmount,
+        dashboardUrl: `${site}/dashboard/earnings`
+      })
+    };
+  });
 
   refresh();
   return { ok: true, message: `Order recorded for ${product.name}.` };
@@ -177,6 +198,66 @@ async function exceedsBalance(slug: string, amount: number) {
   return null;
 }
 
+async function notifyPayoutSent(storeSlug: string, amount: number, method: string, reference: string) {
+  const supabase = await createClient();
+  const site = await siteUrl();
+  sendLater(async () => {
+    const owner = await storeOwnerContact(supabase, storeSlug);
+    if (!owner?.wantsEmail) return null;
+    return { to: owner.email, ...payoutSentEmail({ name: owner.name, amount, method, reference, dashboardUrl: `${site}/dashboard/earnings` }) };
+  });
+}
+
+/** Pay or decline a creator's payout request. Paying records the payout (balance-checked) and links it. */
+export async function resolvePayoutRequest(_prev: AdminState, formData: FormData): Promise<AdminState> {
+  await requireAdmin();
+  const supabase = await createClient();
+  const id = text(formData, "id");
+  const decision = text(formData, "decision");
+
+  const { data: request, error: readError } = await supabase
+    .from("payout_requests")
+    .select("id, store_slug, amount, status")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (isMissingSchema(readError)) return { error: "Run migration 004 first." };
+  if (!request || request.status !== "open") return { error: "That request has already been handled." };
+
+  if (decision === "decline") {
+    const { error } = await supabase
+      .from("payout_requests")
+      .update({ status: "declined", resolved_at: new Date().toISOString() })
+      .eq("id", id);
+    if (error) return { error: "Couldn't decline that request." };
+    refresh();
+    return { ok: true, message: "Request declined." };
+  }
+
+  const amount = Number(request.amount);
+  const overdraw = await exceedsBalance(request.store_slug, amount);
+  if (overdraw) return { error: overdraw };
+
+  const method = text(formData, "method", 60);
+  const reference = text(formData, "reference");
+  const { data: payout, error } = await supabase
+    .from("payouts")
+    .insert({ store_slug: request.store_slug, amount, method, reference, status: "paid", paid_at: new Date().toISOString() })
+    .select("id")
+    .single();
+
+  if (error || !payout) return { error: "Couldn't record that payout." };
+
+  await supabase
+    .from("payout_requests")
+    .update({ status: "paid", payout_id: payout.id, resolved_at: new Date().toISOString() })
+    .eq("id", id);
+
+  await notifyPayoutSent(request.store_slug, amount, method, reference);
+  refresh();
+  return { ok: true, message: `Paid ${money(amount, 2)}. We've emailed the creator.` };
+}
+
 export async function createPayout(_prev: AdminState, formData: FormData): Promise<AdminState> {
   await requireAdmin();
 
@@ -202,6 +283,8 @@ export async function createPayout(_prev: AdminState, formData: FormData): Promi
   });
 
   if (error) return { error: "Couldn't create that payout." };
+
+  if (markPaid) await notifyPayoutSent(store, amount, text(formData, "method", 60), text(formData, "reference"));
 
   refresh();
   return { ok: true, message: markPaid ? "Payout recorded as paid." : "Payout scheduled." };
@@ -241,6 +324,11 @@ export async function setPayoutStatus(_prev: AdminState, formData: FormData): Pr
 
   if (error) return { error: "Couldn't update that payout." };
 
+  if (status === "paid" && current.status !== "paid") {
+    const { data: payout } = await supabase.from("payouts").select("method, reference").eq("id", id).maybeSingle();
+    await notifyPayoutSent(current.store_slug, Number(current.amount), payout?.method ?? "", payout?.reference ?? "");
+  }
+
   refresh();
   return { ok: true, message: `Payout marked ${status}.` };
 }
@@ -254,12 +342,20 @@ export async function setApplicationStatus(_prev: AdminState, formData: FormData
   if (!["new", "reviewing", "accepted", "declined"].includes(status)) return { error: "Unknown status." };
 
   const supabase = await createClient();
-  const { error } = await supabase.from("applications").update({ status }).eq("id", text(formData, "id"));
+  const id = text(formData, "id");
+  const { data: before } = await supabase.from("applications").select("name, email, status").eq("id", id).maybeSingle();
+  const { error } = await supabase.from("applications").update({ status }).eq("id", id);
 
   if (error) return { error: "Couldn't update that application." };
 
+  // Tell the applicant when a decision is first made (not when an admin re-clicks it).
+  if (before && before.status !== status && (status === "accepted" || status === "declined")) {
+    const site = await siteUrl();
+    sendLater({ to: before.email, ...applicationDecisionEmail({ name: before.name, accepted: status === "accepted", siteUrl: site }) });
+  }
+
   refresh();
-  return { ok: true, message: `Application marked ${status}.` };
+  return { ok: true, message: `Application marked ${status}.${status === "accepted" || status === "declined" ? " We've emailed them." : ""}` };
 }
 
 export async function deleteApplication(_prev: AdminState, formData: FormData): Promise<AdminState> {
@@ -315,11 +411,8 @@ export async function sendPasswordReset(_prev: AdminState, formData: FormData): 
   const supabase = await createClient();
   const email = text(formData, "email", 320);
 
-  const headerList = await headers();
-  const site = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ?? headerList.get("origin") ?? "";
-
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${site}/auth/callback?next=/reset-password`
+    redirectTo: `${await siteUrl()}/auth/callback?next=/reset-password`
   });
 
   if (error) return { error: error.message };

@@ -140,6 +140,13 @@ export function productToRow(product: Product) {
   };
 }
 
+/**
+ * Store columns readable by everyone. revenue_share is deliberately absent: it's private
+ * (owners and admins read it from store_balances), and selecting it is refused by the database.
+ */
+export const STORE_COLUMNS =
+  "slug, owner_id, name, short, category, description, headline, headline_em, bio, image, label, background, featured_product_id, is_demo, published, created_at";
+
 export function rowToStore(row: any): Store {
   return {
     slug: row.slug,
@@ -155,7 +162,6 @@ export function rowToStore(row: any): Store {
     label: row.label,
     background: safeColor(row.background, "#f6eaf1"),
     featuredProductId: row.featured_product_id ?? null,
-    revenueShare: Number(row.revenue_share ?? 50),
     isDemo: Boolean(row.is_demo),
     published: row.published !== false
   };
@@ -182,7 +188,6 @@ export const seedStores: Store[] = [
     label: "MONEY TIPS",
     background: "#f6eaf1",
     featuredProductId: "budget",
-    revenueShare: 50,
     isDemo: true,
     published: true
   },
@@ -200,7 +205,6 @@ export const seedStores: Store[] = [
     label: "FITNESS & MEALS",
     background: "#eef4eb",
     featuredProductId: "fitness",
-    revenueShare: 50,
     isDemo: true,
     published: true
   },
@@ -218,7 +222,6 @@ export const seedStores: Store[] = [
     label: "📖 STUDY EDIT",
     background: "#f0eaf7",
     featuredProductId: "study",
-    revenueShare: 50,
     isDemo: true,
     published: true
   }
