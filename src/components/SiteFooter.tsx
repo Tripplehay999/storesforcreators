@@ -12,7 +12,7 @@ export default function SiteFooter() {
 
         <div className="footer-links">
           <Link href="/#process">How it works</Link>
-          <Link href="/#examples">Example stores</Link>
+          <Link href="/#stores">Stores</Link>
           <Link href="/#calculator">Earnings</Link>
           <Link href="/#faq">FAQ</Link>
           <Link href="/dashboard">Creator hub</Link>
@@ -26,8 +26,6 @@ export default function SiteFooter() {
 
       <div className="container footer-bottom">
         <span>© {new Date().getFullYear()} Stores for Creators</span>
-        <span>Example creators, products and figures on this site are illustrative.</span>
-        <button data-policy>Privacy &amp; terms</button>
       </div>
     </footer>
   );

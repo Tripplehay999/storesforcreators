@@ -76,8 +76,17 @@ export function productPrice(product: Product) {
   return product.priceLabel || money(product.price) + " USD";
 }
 
+/** A plain tile in the product's colour, used until the creator adds a cover image. */
+export function placeholderImage(color: string) {
+  const fill = safeColor(color, "#eee3f0");
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400"><rect width="400" height="400" fill="${fill}"/>` +
+    `<g fill="none" stroke="#1c1722" stroke-opacity=".35" stroke-width="10" stroke-linejoin="round">` +
+    `<path d="M200 130 270 170v80l-70 40-70-40v-80z"/><path d="M130 170l70 40 70-40M200 210v80"/></g></svg>`;
+  return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+}
+
 export function productImage(product: Product) {
-  return safeImage(product.image) || IMAGES.budget;
+  return safeImage(product.image) || placeholderImage(product.theme);
 }
 
 export function productLink(product: Product, creator?: string | null) {
@@ -240,8 +249,8 @@ export const seedProducts: Product[] = [
       "Student and complete planner options"
     ],
     faqs: [
-      ["Is this a physical product?", "No. This example collection contains digital budget planners."],
-      ["Are there different planner options?", "Yes. The collection can offer different planner versions at different prices."]
+      ["Is this a physical product?", "No. These are digital budget planners you download and use right away."],
+      ["Are there different planner options?", "Yes. Choose the student planner or the complete planner, each at its own price."]
     ]
   },
   {
@@ -251,7 +260,7 @@ export const seedProducts: Product[] = [
     category: "FINANCIAL COACHING",
     tagline: "Personalized support for your money goals.",
     description:
-      "An illustrative one-on-one financial coaching offering focused on budgeting habits, savings organization, and practical money planning. Actual availability, qualifications, and service scope must be confirmed before booking.",
+      "One-on-one financial coaching focused on budgeting habits, organising your savings, and practical money planning.",
     price: 105,
     priceLabel: "$105 USD / hour",
     badge: "PERSONALIZED SUPPORT",
@@ -264,11 +273,11 @@ export const seedProducts: Product[] = [
       "One-on-one budgeting conversation",
       "Personal money goal planning",
       "Spending and savings organization",
-      "Illustrative 60-minute session"
+      "60-minute session"
     ],
     faqs: [
-      ["Can I book right now?", "Not through this demonstration. Live booking and payment are not connected."],
-      ["Is this regulated financial advice?", "No regulated advice is represented by this sample. A real provider must operate within their qualifications and applicable rules."]
+      ["How do I book?", "Booking opens soon. Check back shortly to pick a time."],
+      ["Is this regulated financial advice?", "No. Coaching covers budgeting and everyday money habits. It isn't regulated financial advice."]
     ]
   },
   {
@@ -278,7 +287,7 @@ export const seedProducts: Product[] = [
     category: "FITNESS / WELLNESS",
     tagline: "Plan your meals. Love your routine.",
     description:
-      "A digital meal preparation and fitness planning concept featuring weekly meal schedules, grocery lists, workouts, and healthy habit tracking.",
+      "A digital meal prep and fitness planner with weekly meal schedules, grocery lists, workouts, and healthy habit tracking.",
     price: 29,
     priceLabel: "From $29 USD",
     badge: "MEAL PREP & FITNESS",
@@ -295,7 +304,7 @@ export const seedProducts: Product[] = [
       "Weekly progress pages"
     ],
     faqs: [
-      ["Is this a personalized nutrition program?", "No. This is a general digital planning concept, not individualized medical or nutrition advice."]
+      ["Is this a personalized nutrition program?", "No. It's a general planner, not personalised medical or nutrition advice."]
     ]
   },
   {

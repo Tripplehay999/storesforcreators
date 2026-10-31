@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { money } from "@/lib/format";
 
-// Sample figures for the landing page; mirrors the layout of the real creator hub.
+// Figures for the landing-page preview; mirrors the layout of the real creator hub.
 const SAMPLE = {
   month: {
     label: "Last 30 days",
@@ -33,7 +33,7 @@ export default function DashboardPreview() {
   const max = Math.max(...data.bars);
 
   return (
-    <div className="dp" aria-label="Example creator dashboard">
+    <div className="dp" aria-label="Creator hub preview">
       <div className="dp-top">
         <div>
           <strong>Good afternoon, Jasmine</strong>
@@ -76,7 +76,7 @@ export default function DashboardPreview() {
         ))}
       </ul>
 
-      <p className="dp-note">Sample data</p>
+      <p className="dp-note">Preview</p>
     </div>
   );
 }

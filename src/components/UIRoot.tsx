@@ -101,19 +101,11 @@ export default function UIRoot({ signedIn }: { signedIn: boolean }) {
 
       if (target.closest("[data-buy]")) {
         showInfo(
-          "Product preview",
-          "CHECKOUT NOT CONNECTED",
-          "This is a customizable storefront preview. Live payments, booking, and digital product delivery are not yet connected."
+          "Checkout opens soon",
+          "COMING SOON",
+          "Purchases on this store aren't open yet. Check back soon."
         );
         return;
-      }
-
-      if (target.closest("[data-policy]")) {
-        showInfo(
-          "Privacy & terms",
-          "FINAL POLICIES REQUIRED",
-          "The final privacy policy, terms of service, refund policy, and applicable disclosures must be completed before accepting live transactions."
-        );
       }
     };
 
@@ -127,7 +119,7 @@ export default function UIRoot({ signedIn }: { signedIn: boolean }) {
       if (image.src.includes("/templates/")) {
         image.style.objectFit = "contain";
         image.style.background = "#f0e3ed";
-        image.alt = "Budget planner image unavailable. Check the public/templates folder.";
+        image.alt = "";
       }
     };
 

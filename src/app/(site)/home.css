@@ -116,6 +116,10 @@
   margin-bottom: 48px;
 }
 
+.b-head-spaced {
+  margin-top: 96px;
+}
+
 .b-head p {
   max-width: 400px;
   color: #5b5163;
@@ -128,12 +132,6 @@
   border-radius: 22px;
   background: #fff;
   box-shadow: var(--b-shadow);
-}
-
-.b-note {
-  margin-top: 28px !important;
-  color: #6b6073;
-  font-size: 13px;
 }
 
 /* ── HERO ─────────────────────────────────────────────────── */
@@ -533,7 +531,7 @@
   opacity: .85;
 }
 
-/* ── EXAMPLE STORES ───────────────────────────────────────── */
+/* ── STORES ───────────────────────────────────────────────── */
 
 .b-stores {
   display: grid;
@@ -1081,7 +1079,7 @@
     font-size: 88px;
   }
 
-  /* Example stores swipe sideways */
+  /* Stores swipe sideways */
   .b-stores {
     display: flex;
     gap: 18px;

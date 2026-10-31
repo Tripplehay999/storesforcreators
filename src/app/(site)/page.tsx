@@ -4,6 +4,7 @@ import DashboardPreview from "@/components/DashboardPreview";
 import SiteFooter from "@/components/SiteFooter";
 import { productImage, productLink, productPrice } from "@/lib/catalog";
 import { getProducts, getStores } from "@/lib/data";
+import type { Product, Store } from "@/lib/types";
 import "./home.css";
 
 const faqs = [
@@ -40,14 +41,41 @@ const STEPS = [
   { title: "You share it. You get paid.", body: "Post about it your way. Your share of every sale shows up in your dashboard and gets paid out to you.", tone: "lime" }
 ];
 
+function StoreCard({ store, product }: { store: Store; product?: Product }) {
+  return (
+    <article className="b-store">
+      <Link className="b-store-photo" href={`/store/${store.slug}`} style={{ background: store.background }}>
+        {store.image && <img src={store.image} alt={store.name} loading="lazy" />}
+        {store.label && <span className="b-store-tag">{store.label}</span>}
+      </Link>
+      <div className="b-store-body">
+        {store.category && <span className="b-store-cat">{store.category}</span>}
+        <h3>{store.name}</h3>
+        {product && (
+          <Link className="b-store-product" href={productLink(product, store.slug)}>
+            <img src={productImage(product)} alt="" loading="lazy" />
+            <div>
+              <strong>{product.name}</strong>
+              <span>{productPrice(product)}</span>
+            </div>
+          </Link>
+        )}
+        <Link className="b-store-link" href={`/store/${store.slug}`}>
+          Visit store <span aria-hidden="true">→</span>
+        </Link>
+      </div>
+    </article>
+  );
+}
+
 export default async function HomePage() {
   const [stores, products] = await Promise.all([getStores(), getProducts()]);
-  const examples = stores
-    .filter(store => store.isDemo)
-    .map(store => ({
-      store,
-      product: products.find(item => item.id === store.featuredProductId) ?? products.find(item => item.store === store.slug)
-    }));
+  const withProduct = (store: Store) => ({
+    store,
+    product: products.find(item => item.id === store.featuredProductId) ?? products.find(item => item.store === store.slug)
+  });
+  const live = stores.filter(store => !store.isDemo).map(withProduct);
+  const examples = stores.filter(store => store.isDemo).map(withProduct);
 
   return (
     <>
@@ -71,7 +99,7 @@ export default async function HomePage() {
 
               <div className="b-actions">
                 <button className="b-btn b-btn-ink" data-apply>Get my store <span aria-hidden="true">→</span></button>
-                <a className="b-btn b-btn-ghost" href="#examples">See example stores</a>
+                <a className="b-btn b-btn-ghost" href="#stores">See the stores</a>
               </div>
 
               <ul className="b-proof">
@@ -159,41 +187,27 @@ export default async function HomePage() {
           </div>
         </section>
 
-        <section className="b-section b-section-lilac" id="examples">
+        <section className="b-section b-section-lilac" id="stores">
           <div className="container">
-            <div className="b-head">
-              <h2 className="b-title">Stores we&apos;d build</h2>
-              <p>Three made-up creators in three niches. Tap one to see the full store.</p>
-            </div>
+            {live.length > 0 && (
+              <>
+                <div className="b-head">
+                  <h2 className="b-title">Live <span className="b-mark">now</span></h2>
+                  <p>Creators already selling on Stores for Creators.</p>
+                </div>
+                <div className="b-stores">
+                  {live.map(item => <StoreCard key={item.store.slug} {...item} />)}
+                </div>
+              </>
+            )}
 
+            <div className={`b-head${live.length > 0 ? " b-head-spaced" : ""}`}>
+              <h2 className="b-title">Store concepts</h2>
+              <p>What your store could look like. Tap one to look around.</p>
+            </div>
             <div className="b-stores">
-              {examples.map(({ store, product }) => (
-                <article className="b-store" key={store.slug}>
-                  <Link className="b-store-photo" href={`/store/${store.slug}`} style={{ background: store.background }}>
-                    <img src={store.image} alt={`Illustrative ${store.category.toLowerCase()} creator`} loading="lazy" />
-                    <span className="b-store-tag">{store.label}</span>
-                  </Link>
-                  <div className="b-store-body">
-                    <span className="b-store-cat">{store.category}</span>
-                    <h3>{store.name}</h3>
-                    {product && (
-                      <Link className="b-store-product" href={productLink(product, store.slug)}>
-                        <img src={productImage(product)} alt="" loading="lazy" />
-                        <div>
-                          <strong>{product.name}</strong>
-                          <span>{productPrice(product)}</span>
-                        </div>
-                      </Link>
-                    )}
-                    <Link className="b-store-link" href={`/store/${store.slug}`}>
-                      Visit store <span aria-hidden="true">→</span>
-                    </Link>
-                  </div>
-                </article>
-              ))}
+              {examples.map(item => <StoreCard key={item.store.slug} {...item} />)}
             </div>
-
-            <p className="b-note">Fictional creators for illustration. Photos do not show real partners.</p>
           </div>
         </section>
 
@@ -201,7 +215,7 @@ export default async function HomePage() {
           <div className="container">
             <div className="b-head">
               <h2 className="b-title">Do the <span className="b-mark">maths.</span></h2>
-              <p>Drag the sliders to try your own numbers. It&apos;s a rough model, not a promise.</p>
+              <p>Drag the sliders to estimate what a store could earn with your audience.</p>
             </div>
 
             <Calculator />

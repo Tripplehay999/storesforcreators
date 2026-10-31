@@ -111,9 +111,8 @@ export default function Calculator() {
         })}
 
         <p className="calculator-disclaimer">
-          Illustrative model only. Follower count does not predict traffic
-          or sales. These are adjustable assumptions, not actual or
-          typical earnings.
+          Estimates use only the numbers you enter. Actual earnings depend
+          on your traffic, pricing and refunds.
         </p>
       </div>
 
