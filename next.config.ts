@@ -16,7 +16,11 @@ const nextConfig: NextConfig = {
   turbopack: { root: __dirname },
   poweredByHeader: false,
   async headers() {
-    return [{ source: "/:path*", headers: SECURITY_HEADERS }];
+    return [
+      { source: "/:path*", headers: SECURITY_HEADERS },
+      // Font files never change in place (a new version gets a new name), so browsers can keep them.
+      { source: "/fonts/:path*", headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }] }
+    ];
   },
   async redirects() {
     return [{ source: "/studio", destination: "/dashboard/products", permanent: false }];

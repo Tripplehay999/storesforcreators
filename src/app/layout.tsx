@@ -1,27 +1,13 @@
 import type { Metadata, Viewport } from "next";
-import { DM_Sans, Instrument_Serif, Manrope } from "next/font/google";
+import { preload } from "react-dom";
 import UIRoot from "@/components/UIRoot";
 import { getSession } from "@/lib/data";
+import "./fonts.css";
 import "./globals.css";
 
-const dmSans = DM_Sans({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
-  variable: "--font-dm-sans"
-});
-
-const instrumentSerif = Instrument_Serif({
-  subsets: ["latin"],
-  weight: "400",
-  style: ["normal", "italic"],
-  variable: "--font-instrument-serif"
-});
-
-const manrope = Manrope({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
-  variable: "--font-manrope"
-});
+// Fonts are self-hosted (fonts.css, files in public/fonts) so they load even when Google Fonts can't be reached.
+// These are the ones every page uses; the other character sets load only when needed.
+const PRELOADED_FONTS = ["manrope-latin", "dm-sans-latin", "instrument-serif-latin", "instrument-serif-italic-latin"];
 
 const TITLE = "Stores for Creators | Your Audience. Our Expertise.";
 const DESCRIPTION =
@@ -61,11 +47,12 @@ export const viewport: Viewport = {
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const session = await getSession();
 
+  for (const font of PRELOADED_FONTS) {
+    preload(`/fonts/${font}.woff2`, { as: "font", type: "font/woff2", crossOrigin: "anonymous" });
+  }
+
   return (
-    <html
-      lang="en"
-      className={`${dmSans.variable} ${instrumentSerif.variable} ${manrope.variable}`}
-    >
+    <html lang="en">
       <body>
         {children}
         <UIRoot signedIn={Boolean(session)} />

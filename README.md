@@ -257,6 +257,8 @@ src/
     auth/          login and signup forms
     admin/         admin UI
   lib/             data access, stats, email, Stripe, AI, helpers
+public/
+  fonts/           self-hosted Manrope, DM Sans and Instrument Serif (+ their open-font licences)
 supabase/
   migrations/      database schema, run in order
   templates/       branded auth emails for Supabase
