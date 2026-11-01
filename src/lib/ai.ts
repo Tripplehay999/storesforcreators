@@ -95,7 +95,7 @@ async function run<T>(schema: z.ZodType<T>, system: string, content: string): Pr
     if (error instanceof Anthropic.RateLimitError) throw new AiError("Lots of people are asking for ideas right now. Try again in a minute.");
     if (error instanceof Anthropic.AuthenticationError || error instanceof Anthropic.PermissionDeniedError) {
       console.error("[ai] check ANTHROPIC_API_KEY:", error.message);
-      throw new AiError("AI ideas aren't set up correctly yet. The site owner needs to check the API key.");
+      throw new AiError("Ideas aren't available right now. Please try again later.");
     }
     if (error instanceof Anthropic.BadRequestError) {
       console.error("[ai] bad request:", error.message);

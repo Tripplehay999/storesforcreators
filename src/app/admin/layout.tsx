@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import AdminNav from "@/components/admin/AdminNav";
+import LogoMark from "@/components/LogoMark";
 import ModeSwitch from "@/components/ModeSwitch";
 import { getCounts } from "@/lib/admin-data";
 import { adminOnly } from "@/lib/data";
@@ -16,7 +17,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     <div className="adm">
       <aside className="adm-sidebar">
         <div className="adm-logo">
-          <span className="adm-logo-mark">SFC</span>
+          <span className="adm-logo-mark"><LogoMark size={34} /></span>
           <div>
             <strong>Control</strong>
             <small>Admin panel</small>

@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { productLink } from "@/lib/catalog";
+import { checkoutAccess } from "@/lib/checkout";
 import { getProduct, getStore } from "@/lib/data";
 import { siteUrl } from "@/lib/site";
 import { createCheckoutSession, discountedCents, MIN_CHARGE_CENTS, stripeConfigured } from "@/lib/stripe";
@@ -22,7 +23,8 @@ export async function POST(request: NextRequest) {
   if (!product) return back("unavailable");
 
   const store = await getStore(product.store);
-  if (!store || store.isDemo || !store.published) return back("unavailable");
+  // Same rule as the Buy button: the store's checkout switch (and, while testing, who's asking).
+  if (!store || !(await checkoutAccess(store)).open) return back("unavailable");
 
   const priceCents = Math.round(product.price * 100);
   let percentOff = 0;

@@ -73,6 +73,32 @@ export async function updateStore(_prev: AdminState, formData: FormData): Promis
   return { ok: true, message: `Saved ${slug}.` };
 }
 
+export async function setCheckoutMode(_prev: AdminState, formData: FormData): Promise<AdminState> {
+  const session = await requireAdmin();
+  const supabase = await createClient();
+  const slug = text(formData, "slug");
+  const mode = text(formData, "mode");
+
+  if (!["off", "testing", "on"].includes(mode)) return { error: "Choose Off, Testing or On." };
+
+  const { error } = await supabase
+    .from("store_checkout")
+    .upsert(
+      { store_slug: slug, mode, updated_at: new Date().toISOString(), updated_by: session.profile.id },
+      { onConflict: "store_slug" }
+    );
+
+  if (error) {
+    if (isMissingSchema(error)) return { error: "The checkout switch isn't available yet." };
+    return { error: "Couldn't change checkout for this store." };
+  }
+
+  refresh();
+  revalidatePath(`/store/${slug}`);
+  const label = mode === "on" ? "open to everyone" : mode === "testing" ? "in testing (only admins and the creator can buy)" : "off";
+  return { ok: true, message: `Checkout for ${slug} is ${label}.` };
+}
+
 export async function deleteStore(_prev: AdminState, formData: FormData): Promise<AdminState> {
   await requireAdmin();
   const supabase = await createClient();
@@ -221,7 +247,7 @@ export async function resolvePayoutRequest(_prev: AdminState, formData: FormData
     .eq("id", id)
     .maybeSingle();
 
-  if (isMissingSchema(readError)) return { error: "Run migration 004 first." };
+  if (isMissingSchema(readError)) return { error: "Payout requests aren't available yet." };
   if (!request || request.status !== "open") return { error: "That request has already been handled." };
 
   if (decision === "decline") {
@@ -422,7 +448,10 @@ export async function sendPasswordReset(_prev: AdminState, formData: FormData): 
 export async function confirmUserEmail(_prev: AdminState, formData: FormData): Promise<AdminState> {
   await requireAdmin();
 
-  if (!hasServiceRole()) return { error: "Add SUPABASE_SERVICE_ROLE_KEY to enable this." };
+  if (!hasServiceRole()) {
+    console.warn("[admin] SUPABASE_SERVICE_ROLE_KEY is not set; account actions are unavailable.");
+    return { error: "This action isn't available on this site yet." };
+  }
 
   const { error } = await createServiceClient().auth.admin.updateUserById(text(formData, "id"), {
     email_confirm: true
@@ -436,7 +465,10 @@ export async function deleteUser(_prev: AdminState, formData: FormData): Promise
   const { profile } = await requireAdmin();
   const id = text(formData, "id");
 
-  if (!hasServiceRole()) return { error: "Add SUPABASE_SERVICE_ROLE_KEY to enable this." };
+  if (!hasServiceRole()) {
+    console.warn("[admin] SUPABASE_SERVICE_ROLE_KEY is not set; account actions are unavailable.");
+    return { error: "This action isn't available on this site yet." };
+  }
   if (id === profile.id) return { error: "You can't delete your own account here." };
 
   const { error } = await createServiceClient().auth.admin.deleteUser(id);

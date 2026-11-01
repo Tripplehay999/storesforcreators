@@ -22,8 +22,25 @@ type Values = {
   image: string;
   label: string;
   background: string;
+  featured_product_id: string;
   published: boolean;
 };
+
+/** What the preview needs to draw a product card. */
+export type PreviewProduct = { id: string; name: string; price: string; image: string; theme: string };
+
+/** Soft backgrounds that keep dark text easy to read. */
+const SWATCHES = [
+  { name: "Blush", value: "#f6eaf1" },
+  { name: "Lilac", value: "#ece4f7" },
+  { name: "Sky", value: "#e1edf9" },
+  { name: "Mint", value: "#e0f3e8" },
+  { name: "Lime", value: "#eef8cf" },
+  { name: "Butter", value: "#fbf1cf" },
+  { name: "Peach", value: "#fde3d5" },
+  { name: "Sand", value: "#f1e9dd" },
+  { name: "Cloud", value: "#f1f1ee" }
+];
 
 function initialValues(store: Store | null): Values {
   return {
@@ -38,11 +55,26 @@ function initialValues(store: Store | null): Values {
     image: store?.image ?? "",
     label: store?.label ?? "",
     background: store?.background ?? "#f6eaf1",
+    featured_product_id: store?.featuredProductId ?? "",
     published: store?.published ?? true
   };
 }
 
-export default function StoreForm({ store, userId }: { store: Store | null; userId: string }) {
+function Step({ number, title, children }: { number: number; title: string; children?: React.ReactNode }) {
+  return (
+    <div className="form-section-head step-head">
+      <span className="step-num" aria-hidden="true">{number}</span>
+      <div>
+        <h2>{title}</h2>
+        {children && <p>{children}</p>}
+      </div>
+    </div>
+  );
+}
+
+type Props = { store: Store | null; userId: string; products?: PreviewProduct[] };
+
+export default function StoreForm({ store, userId, products = [] }: Props) {
   const [state, action, pending] = useActionState(saveStore, {});
   const [values, setValues] = useState(() => initialValues(store));
   const [uploading, setUploading] = useState(false);
@@ -57,7 +89,8 @@ export default function StoreForm({ store, userId }: { store: Store | null; user
   const field = (name: Exclude<keyof Values, "published">) => ({
     name,
     value: values[name],
-    onChange: (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => set(name, event.target.value)
+    onChange: (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
+      set(name, event.target.value)
   });
 
   async function onUpload(event: React.ChangeEvent<HTMLInputElement>) {
@@ -76,17 +109,20 @@ export default function StoreForm({ store, userId }: { store: Store | null; user
     }
   }
 
+  // The preview shows the featured product first, like the real store page.
+  const featured = products.find(product => product.id === values.featured_product_id);
+  const previewProducts = (featured ? [featured, ...products.filter(product => product !== featured)] : products).slice(0, 2);
+  const customColour = !SWATCHES.some(swatch => swatch.value === values.background.toLowerCase());
+  const showFeatured = Boolean(store) && products.length > 0;
+
   return (
     <div className="settings">
-      <form className="card" action={action}>
+      <form className="card store-form" action={action}>
         <div className="form-section">
-          <div className="form-section-head">
-            <h2>Store details</h2>
-            <p>How your store is named and found.</p>
-          </div>
+          <Step number={1} title="Your store">The name and web address people use to find you.</Step>
 
           <label className="field full">
-            Store address
+            Store web address
             {store ? (
               <div className="input-prefix">
                 <span>/store/</span>
@@ -106,7 +142,7 @@ export default function StoreForm({ store, userId }: { store: Store | null; user
                     onChange={event => set("slug", slugify(event.target.value, 40))}
                   />
                 </div>
-                <span className="field-hint">Letters, numbers and dashes. This can&apos;t be changed later.</span>
+                <span className="field-hint">Letters, numbers and dashes only, like your social handle. This can&apos;t be changed later.</span>
               </>
             )}
           </label>
@@ -117,47 +153,46 @@ export default function StoreForm({ store, userId }: { store: Store | null; user
           </label>
 
           <label className="field">
-            Category
-            <input {...field("category")} placeholder="Finance / Money tips" />
+            What you&apos;re about
+            <input {...field("category")} placeholder="Money tips" />
+            <span className="field-hint">A few words, like Fitness or Recipes.</span>
           </label>
 
           <label className="field">
             One-line description
-            <input {...field("description")} placeholder="What you offer, in a sentence" />
+            <input {...field("description")} placeholder="Simple money plans for busy people" />
+            <span className="field-hint">Shows up when your link is shared on WhatsApp, X and others.</span>
           </label>
         </div>
 
         <div className="form-section">
-          <div className="form-section-head">
-            <h2>Storefront header</h2>
-            <p>The first thing visitors see on your store page.</p>
-          </div>
+          <Step number={2} title="Top of your store page">The first thing visitors see. Watch the preview change as you type.</Step>
 
           <label className="field">
-            Headline
-            <input {...field("headline")} />
+            Big headline
+            <input {...field("headline")} placeholder="Your brand." />
           </label>
 
           <label className="field">
             Second line
-            <input {...field("headline_em")} />
-            <span className="field-hint">Shown in italics under the headline.</span>
+            <input {...field("headline_em")} placeholder="Your world." />
+            <span className="field-hint">Shown in a fancy font under the headline.</span>
           </label>
 
           <label className="field full">
-            Bio
+            About you
             <textarea {...field("bio")} rows={3} placeholder="A couple of sentences about you and who your products are for." />
           </label>
 
           <div className="field full">
-            Portrait photo
+            Your photo
             <div className="media-field">
               <span className="media-thumb">
                 {values.image ? <img src={values.image} alt="" /> : <Icon name="image" size={22} />}
               </span>
               <div>
                 <label className="btn btn-secondary btn-sm">
-                  <Icon name="upload" size={14} /> {uploading ? "Uploading…" : values.image ? "Replace photo" : "Upload photo"}
+                  <Icon name="upload" size={14} /> {uploading ? "Uploading…" : values.image ? "Change photo" : "Upload a photo"}
                   <input
                     type="file"
                     accept="image/png,image/jpeg,image/webp"
@@ -166,44 +201,86 @@ export default function StoreForm({ store, userId }: { store: Store | null; user
                     hidden
                   />
                 </label>
-                <span className="field-hint">PNG, JPG or WebP, under 2 MB. Portrait shots work best.</span>
+                <span className="field-hint">A clear photo of you works best. PNG, JPG or WebP, under 2 MB.</span>
               </div>
             </div>
           </div>
 
-          <label className="field full">
-            Or paste an image link
-            <input {...field("image")} placeholder="https://…" inputMode="url" />
-          </label>
+          <details className="full more-options">
+            <summary>More photo options</summary>
+            <div className="more-options-body">
+              <label className="field">
+                Name sticker on photo
+                <input {...field("short")} placeholder="jasmine's financials." />
+                <span className="field-hint">Optional. A little sticker on your photo.</span>
+              </label>
 
-          <label className="field">
-            Name on photo
-            <input {...field("short")} placeholder="jasmine's financials." />
-          </label>
+              <label className="field">
+                Tag on photo
+                <input {...field("label")} placeholder="Money tips" />
+                <span className="field-hint">Optional. A small label in the corner.</span>
+              </label>
 
-          <label className="field">
-            Photo tag
-            <input {...field("label")} placeholder="Money tips" />
-          </label>
+              <label className="field full">
+                Or paste a link to a photo
+                <input {...field("image")} placeholder="https://…" inputMode="url" />
+              </label>
+            </div>
+          </details>
         </div>
 
-        <div className="form-section">
-          <div className="form-section-head">
-            <h2>Appearance &amp; visibility</h2>
-          </div>
+        {showFeatured && (
+          <div className="form-section">
+            <Step number={3} title="Featured product">Show one product big at the top of your store, with its Buy button.</Step>
 
-          <label className="field full">
-            Background colour
-            <span className="color-field">
-              <input {...field("background")} type="color" />
-              <code>{values.background}</code>
-            </span>
-          </label>
+            <label className="field full">
+              Product to feature
+              <select {...field("featured_product_id")}>
+                <option value="">None, just show all my products</option>
+                {products.map(product => (
+                  <option key={product.id} value={product.id}>{product.name} ({product.price})</option>
+                ))}
+              </select>
+            </label>
+          </div>
+        )}
+
+        <div className="form-section">
+          <Step number={showFeatured ? 4 : 3} title="Colour & visibility" />
+
+          <div className="field full">
+            <span id="colour-label">Background colour</span>
+            <div className="swatches" role="radiogroup" aria-labelledby="colour-label">
+              {SWATCHES.map(swatch => {
+                const active = values.background.toLowerCase() === swatch.value;
+                return (
+                  <button
+                    key={swatch.value}
+                    type="button"
+                    role="radio"
+                    aria-checked={active}
+                    aria-label={swatch.name}
+                    title={swatch.name}
+                    className={`swatch${active ? " active" : ""}`}
+                    style={{ background: swatch.value }}
+                    onClick={() => set("background", swatch.value)}
+                  >
+                    {active && <Icon name="check" size={16} />}
+                  </button>
+                );
+              })}
+              <label className={`swatch swatch-custom${customColour ? " active" : ""}`} title="Pick any colour">
+                <input {...field("background")} type="color" aria-label="Pick any colour" />
+                <span className="sr-only">Pick any colour</span>
+              </label>
+            </div>
+            <span className="field-hint">Tap a colour, or the last circle to pick your own.</span>
+          </div>
 
           <label className="toggle full">
             <span>
               <strong>Store is public</strong>
-              <small>{values.published ? "Anyone with the link can visit and buy." : "Hidden: only you can see it."}</small>
+              <small>{values.published ? "Anyone with your link can visit and buy." : "Hidden: only you can see it."}</small>
             </span>
             <input
               name="published"
@@ -217,16 +294,16 @@ export default function StoreForm({ store, userId }: { store: Store | null; user
 
         <div className="form-actions">
           <button className="btn btn-primary" type="submit" disabled={pending || uploading}>
-            {pending ? "Saving…" : store ? "Save changes" : "Create store"}
+            {pending ? "Saving…" : store ? "Save changes" : "Create my store"}
           </button>
           {store && <Link className="btn btn-ghost" href="/dashboard/products">Manage products</Link>}
           {state.error && <p className="form-error" role="alert">{state.error}</p>}
         </div>
       </form>
 
-      <aside className="card settings-preview">
+      <aside className="card settings-preview" aria-label="Store preview">
         <div className="card-head">
-          <h2>Preview</h2>
+          <h2>Live preview</h2>
           {store && (
             <a className="link" href={`/store/${store.slug}`} target="_blank" rel="noreferrer">Open store</a>
           )}
@@ -234,18 +311,45 @@ export default function StoreForm({ store, userId }: { store: Store | null; user
 
         <div className="mini-store" style={{ "--store-bg": values.background } as CSSProperties}>
           <div className="mini-store-bar">
-            <i /><i /><i />
-            <span>/store/{values.slug || "your-name"}</span>
+            <span className="mini-store-avatar">
+              {values.image ? <img src={values.image} alt="" /> : (values.name || "Y").charAt(0)}
+            </span>
+            <strong>{values.name || "Your store"}</strong>
+            <span className="mini-store-shop">Shop</span>
           </div>
-          <div className="mini-store-body">
-            <div>
-              <small>{values.category || "Your category"}</small>
-              <h3>{values.headline || "Your headline"}<br /><em>{values.headline_em}</em></h3>
+
+          <div className="mini-store-hero">
+            <div className="mini-store-copy">
+              {values.category && <small>{values.category}</small>}
+              <h3>
+                {values.headline || "Your headline"}
+                {values.headline_em && <em>{values.headline_em}</em>}
+              </h3>
               <p>{values.bio || "Your bio appears here."}</p>
+              <span className="mini-store-cta">Shop now</span>
             </div>
             <div className="mini-store-photo">
-              {values.image ? <img src={values.image} alt="Portrait preview" /> : <Icon name="image" size={24} />}
+              {values.image ? <img src={values.image} alt="" /> : <Icon name="image" size={24} />}
+              {values.label && <span className="mini-store-tag">{values.label}</span>}
+              {values.short && <span className="mini-store-name">{values.short}</span>}
             </div>
+          </div>
+
+          <div className="mini-store-shopgrid">
+            {previewProducts.length > 0 ? previewProducts.map(product => (
+              <div className="mini-product" key={product.id}>
+                <span className="mini-product-image" style={{ background: product.theme }}>
+                  <img src={product.image} alt="" />
+                </span>
+                <strong>{product.name}</strong>
+                <span className="mini-product-foot">
+                  <span>{product.price}</span>
+                  <span className="mini-product-buy">Buy</span>
+                </span>
+              </div>
+            )) : (
+              <p className="mini-store-empty">Your products show here.</p>
+            )}
           </div>
         </div>
       </aside>

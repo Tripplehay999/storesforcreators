@@ -74,14 +74,6 @@ export default async function DashboardPage({ searchParams }: Props) {
     getStoreBalance(store.slug),
     aiOn ? getLatestInsight<Recommendations>(store.slug, "recommendations") : Promise.resolve({ ready: false, insight: null })
   ]);
-  const isAdmin = session.profile.role === "admin";
-  const adminHint = !isAdmin
-    ? null
-    : !aiOn
-      ? "Add ANTHROPIC_API_KEY to your environment variables to give creators AI ideas. Only admins see this note."
-      : !latest.ready
-        ? "Run supabase/migrations/004_growth.sql to turn on AI ideas. Only admins see this note."
-        : null;
 
   return (
     <>
@@ -96,7 +88,7 @@ export default async function DashboardPage({ searchParams }: Props) {
         recentOrders={recent.orders}
         products={products}
         now={now}
-        ai={{ enabled: aiOn && latest.ready, initial: latest.insight, adminHint }}
+        ai={{ enabled: aiOn && latest.ready, initial: latest.insight }}
       />
     </>
   );

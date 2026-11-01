@@ -45,6 +45,11 @@ export async function saveProfile(_prev: FormState, formData: FormData): Promise
   return { ok: true, message: "Profile saved." };
 }
 
+function featuredId(value: FormDataEntryValue | null) {
+  const id = String(value || "").trim();
+  return /^[a-z0-9-]{1,80}$/.test(id) ? id : null;
+}
+
 export async function saveStore(_prev: FormState, formData: FormData): Promise<FormState> {
   const session = await requireSession();
   const supabase = await createClient();
@@ -60,7 +65,9 @@ export async function saveStore(_prev: FormState, formData: FormData): Promise<F
     image: safeImage(formData.get("image")),
     label: text(formData, "label", 40).toUpperCase(),
     background: safeColor(formData.get("background"), "#f6eaf1"),
-    published: formData.get("published") === "on"
+    published: formData.get("published") === "on",
+    // Only sent once the store has products. The store page ignores ids that aren't its own products.
+    ...(formData.has("featured_product_id") && { featured_product_id: featuredId(formData.get("featured_product_id")) })
   };
 
   if (!fields.name) return { error: "Give your store a name." };
@@ -179,7 +186,8 @@ export async function importProducts(input: Product[]): Promise<Result> {
 
 // ── Digital delivery ─────────────────────────────────────────
 
-const MIGRATION_HINT = "This needs the latest database update (migration 004). Ask your site admin.";
+// Shown when a feature's database tables don't exist yet. Setup details live in the README, not the UI.
+const MIGRATION_HINT = "This isn't available yet. Please try again later.";
 
 /** Points a product at a file already uploaded to the private product-files bucket (in the uploader's folder). */
 export async function attachProductFile(productId: string, storeSlug: string, path: string, fileName: string, sizeBytes: number): Promise<Result> {

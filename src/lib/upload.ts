@@ -42,7 +42,7 @@ export async function uploadProductFile(file: File, userId: string, productId: s
 
   if (error) {
     throw new Error(/bucket not found/i.test(error.message)
-      ? "File uploads need the latest database update (migration 004)."
+      ? "File uploads aren't available yet. Please try again later."
       : "Upload failed. Please try again.");
   }
 

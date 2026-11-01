@@ -72,6 +72,12 @@ export function normalizeProduct(product: Partial<Product> & Record<string, unkn
   };
 }
 
+/** Text for a Buy button: the creator's own wording, unless it's a browse-style default like "Explore product". */
+export function buyLabel(product: Product) {
+  const cta = product.cta.trim();
+  return !cta || /^(explore|learn more|view|see|discover)\b/i.test(cta) ? "Buy now" : cta;
+}
+
 export function productPrice(product: Product) {
   return product.priceLabel || money(product.price) + " USD";
 }

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { attachProductFile, deleteProduct, importProducts, removeProductFile, saveProduct } from "@/app/dashboard/actions";
+import FaqEditor from "@/components/hub/FaqEditor";
 import Icon from "@/components/hub/Icon";
 import { Empty } from "@/components/hub/ui";
 import { newProductId, normalizeProduct, productImage, productPrice, safeImage } from "@/lib/catalog";
@@ -28,6 +29,12 @@ function fileSize(bytes: number) {
   return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 }
 
+/** Question/answer pairs from the FAQ editor, in order, including half-filled ones. */
+function readFaqs(data: FormData): [string, string][] {
+  const answers = data.getAll("faq_answer").map(value => String(value).trim());
+  return data.getAll("faq_question").map((value, index) => [String(value).trim(), answers[index] ?? ""]);
+}
+
 function blankProduct(store: string): Product {
   return normalizeProduct({
     id: newProductId(),
@@ -41,7 +48,7 @@ function blankProduct(store: string): Product {
     badge: "NEW PRODUCT",
     theme: "#f0e0ed",
     layout: "split",
-    cta: "Explore product",
+    cta: "Buy now",
     features: ["Feature one", "Feature two"],
     faqs: []
   });
@@ -140,11 +147,7 @@ export default function Studio({ initialProducts, stores, initialId, ownStore, u
         .split("\n")
         .map(line => line.trim())
         .filter(Boolean),
-      faqs: String(data.get("faqs") || "")
-        .split("\n")
-        .map(line => line.split("|").map(item => item.trim()))
-        .filter(pair => pair.length >= 2 && pair[0] && pair[1])
-        .map(pair => [pair[0], pair[1]] as [string, string])
+      faqs: readFaqs(data).filter(([question, answer]) => question && answer)
     });
   }
 
@@ -162,7 +165,27 @@ export default function Studio({ initialProducts, stores, initialId, ownStore, u
     return true;
   }
 
+  /** Points the creator at a question without an answer (or the other way round) instead of silently dropping it. */
+  function checkFaqs() {
+    const form = formRef.current;
+    if (!form) return true;
+
+    const pairs = readFaqs(new FormData(form));
+    const index = pairs.findIndex(([question, answer]) => Boolean(question) !== Boolean(answer));
+    if (index < 0) return true;
+
+    const missingAnswer = Boolean(pairs[index][0]);
+    toast(missingAnswer
+      ? `Question ${index + 1} needs an answer. Add one, or remove the question.`
+      : `Answer ${index + 1} needs a question. Add one, or remove it.`);
+    setTab("edit");
+    const fields = form.querySelectorAll<HTMLElement>(missingAnswer ? '[name="faq_answer"]' : '[name="faq_question"]');
+    requestAnimationFrame(() => fields[index]?.focus());
+    return false;
+  }
+
   async function onSave() {
+    if (!checkFaqs()) return;
     const product = readForm();
     if (!product) return;
 
@@ -462,8 +485,9 @@ export default function Studio({ initialProducts, stores, initialId, ownStore, u
                 </label>
 
                 <label className="field">
-                  Button text
-                  <input name="cta" defaultValue={draft.cta} />
+                  Buy button text
+                  <input name="cta" defaultValue={draft.cta} placeholder="Buy now" />
+                  <span className="field-hint">For example &ldquo;Get the guide&rdquo;.</span>
                 </label>
               </div>
 
@@ -507,7 +531,7 @@ export default function Studio({ initialProducts, stores, initialId, ownStore, u
 
                 <div className="field full">
                   {initialFiles === null ? (
-                    <p className="field-hint">File delivery needs the latest database update (migration 004).</p>
+                    <p className="field-hint">File delivery is coming soon. You&apos;ll be able to attach the file buyers get right here.</p>
                   ) : files[draft.id] ? (
                     <div className="delivery-file">
                       <span className="media-thumb"><Icon name="file" size={22} /></span>
@@ -540,13 +564,7 @@ export default function Studio({ initialProducts, stores, initialId, ownStore, u
                 <label className="field full">
                   What&apos;s included
                   <textarea name="features" rows={5} defaultValue={draft.features.join("\n")} />
-                  <span className="field-hint">One item per line.</span>
-                </label>
-
-                <label className="field full">
-                  FAQs
-                  <textarea name="faqs" rows={4} defaultValue={draft.faqs.map(pair => pair.join(" | ")).join("\n")} />
-                  <span className="field-hint">One per line, as: Question | Answer</span>
+                  <span className="field-hint">Put each item on its own line (press Enter between them).</span>
                 </label>
 
                 <label className="field">
@@ -577,6 +595,17 @@ export default function Studio({ initialProducts, stores, initialId, ownStore, u
                     </select>
                   </label>
                 )}
+              </div>
+
+              <div className="form-section">
+                <div className="form-section-head">
+                  <h2>Questions buyers ask</h2>
+                  <p>Answer common questions so buyers feel sure before paying. They show at the bottom of the product page.</p>
+                </div>
+
+                <div className="field full">
+                  <FaqEditor initial={draft.faqs} />
+                </div>
               </div>
             </form>
 

@@ -4,6 +4,7 @@ import HubNav from "@/components/HubNav";
 import type { HubTheme } from "@/lib/theme";
 import type { Profile, Store } from "@/lib/types";
 import HubTour from "./HubTour";
+import LogoMark from "@/components/LogoMark";
 import Icon from "./Icon";
 import ThemeToggle from "./ThemeToggle";
 import TourButton from "./TourButton";
@@ -52,7 +53,7 @@ export default function HubShell({ profile, store, theme, children }: Props) {
     <div className="app" data-theme={theme}>
       <aside className="app-sidebar">
         <Link className="app-logo" href="/">
-          <span className="app-logo-mark">SFC</span>
+          <span className="app-logo-mark"><LogoMark size={30} /></span>
           <span>Stores for Creators</span>
         </Link>
 
@@ -91,7 +92,7 @@ export default function HubShell({ profile, store, theme, children }: Props) {
 
       <header className="app-topbar">
         <Link className="app-logo" href="/dashboard">
-          <span className="app-logo-mark">SFC</span>
+          <span className="app-logo-mark"><LogoMark size={30} /></span>
           <span>{store?.name ?? "Creator hub"}</span>
         </Link>
 

@@ -50,10 +50,8 @@ export default async function PromotePage({ searchParams }: Props) {
           <DiscountCodes storeSlug={store.slug} codes={codes.codes} viewingStore={isOwnStore ? undefined : store.slug} />
         ) : (
           <section className="card">
-            <Empty title="Discount codes are almost ready">
-              {session.profile.role === "admin"
-                ? "Run supabase/migrations/004_growth.sql in Supabase to turn on discount codes and AI captions."
-                : "Discount codes are being switched on for your store. Check back soon."}
+            <Empty title="Discount codes are on the way">
+              You&apos;ll be able to create codes for your audience here soon.
             </Empty>
           </section>
         )}

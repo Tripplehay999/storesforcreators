@@ -40,10 +40,8 @@ export default async function AnalyticsPage({ searchParams }: Props) {
       <>
         <PageHeader title="Analytics" />
         <section className="card">
-          <Empty title="Analytics are almost ready">
-            {session.profile.role === "admin"
-              ? "Run supabase/migrations/004_growth.sql in Supabase to start tracking visits."
-              : "Visit tracking is being switched on for your store. Check back soon."}
+          <Empty title="Analytics are on the way">
+            Visit tracking for your store is coming soon. Check back shortly.
           </Empty>
         </section>
       </>

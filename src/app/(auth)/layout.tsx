@@ -1,4 +1,5 @@
 import Link from "next/link";
+import LogoMark from "@/components/LogoMark";
 import "./auth.css";
 
 const POINTS = [
@@ -12,7 +13,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
     <main className="au">
       <aside className="au-brand">
         <Link className="au-logo" href="/">
-          <span className="au-logo-mark">SFC</span>
+          <span className="au-logo-mark"><LogoMark size={40} /></span>
           <span>Stores for Creators</span>
         </Link>
 

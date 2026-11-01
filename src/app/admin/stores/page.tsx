@@ -1,13 +1,68 @@
 import Link from "next/link";
 import ActionForm from "@/components/admin/ActionForm";
 import { getStoreBalances, getUsers } from "@/lib/admin-data";
+import { CHECKOUT_MODES, getCheckoutModes, stripeTestMode } from "@/lib/checkout";
+import { emailConfigured } from "@/lib/email";
 import { money, number } from "@/lib/format";
-import { deleteStore, updateStore } from "../actions";
+import { deleteStore, setCheckoutMode, updateStore } from "../actions";
 import { adminOnly } from "@/lib/data";
+
+/** Plain-language status of the pieces checkout needs. Never shows keys or setting names. */
+function CheckoutSetup({ switchReady }: { switchReady: boolean }) {
+  const hasKey = Boolean(process.env.STRIPE_SECRET_KEY);
+  const hasWebhook = Boolean(process.env.STRIPE_WEBHOOK_SECRET);
+  const test = stripeTestMode();
+
+  const rows = [
+    {
+      label: "Card payments (Stripe)",
+      ok: hasKey,
+      text: hasKey ? (test ? "Connected · test mode (no real money moves)" : "Connected · live mode (real payments)") : "Not connected yet"
+    },
+    {
+      label: "Payment confirmations",
+      ok: hasWebhook,
+      text: hasWebhook ? "Connected: paid orders are recorded automatically" : "Not connected yet: orders won't be recorded"
+    },
+    {
+      label: "Receipts & sale emails",
+      ok: emailConfigured(),
+      text: emailConfigured() ? "Connected" : "Not connected yet: buyers won't get a receipt or download email"
+    },
+    {
+      label: "Per-store switch",
+      ok: switchReady,
+      text: switchReady ? "Ready" : "Not available yet"
+    }
+  ];
+
+  return (
+    <section className="adm-panel" style={{ marginBottom: 16 }}>
+      <div className="adm-panel-head">
+        <strong>Checkout</strong>
+        <small>Open buying one store at a time: Off → Testing → On.</small>
+      </div>
+      <div className="adm-panel-body">
+        <dl className="adm-dl">
+          {rows.map(row => (
+            <div key={row.label} style={{ display: "contents" }}>
+              <dt>{row.label}</dt>
+              <dd><span className={`adm-pill ${row.ok ? "green" : "amber"}`}>{row.ok ? "✓" : "!"}</span> {row.text}</dd>
+            </div>
+          ))}
+        </dl>
+        <p className="adm-muted" style={{ marginTop: 12, fontSize: 12 }}>
+          {CHECKOUT_MODES.map(mode => `${mode.label}: ${mode.hint}`).join("  ·  ")}
+          {test && "  Test purchases use the card 4242 4242 4242 4242 with any future date and any CVC."}
+        </p>
+      </div>
+    </section>
+  );
+}
 
 export default async function AdminStoresPage() {
   await adminOnly();
-  const [stores, users] = await Promise.all([getStoreBalances(), getUsers()]);
+  const [stores, users, checkout] = await Promise.all([getStoreBalances(), getUsers(), getCheckoutModes()]);
   const owners = new Map(users.map(user => [user.id, user]));
 
   return (
@@ -16,9 +71,11 @@ export default async function AdminStoresPage() {
         <div>
           <span className="adm-crumb">Admin</span>
           <h1>Stores</h1>
-          <p>Revenue share, visibility, and lifetime totals for every storefront.</p>
+          <p>Revenue share, visibility, checkout and lifetime totals for every storefront.</p>
         </div>
       </div>
+
+      <CheckoutSetup switchReady={checkout.ready} />
 
       <section className="adm-panel">
         {stores.length === 0 ? (
@@ -35,6 +92,7 @@ export default async function AdminStoresPage() {
                   <th className="num">Gross</th>
                   <th className="num">Owed</th>
                   <th>Share · Public</th>
+                  <th>Checkout</th>
                   <th></th>
                 </tr>
               </thead>
@@ -82,6 +140,26 @@ export default async function AdminStoresPage() {
                           </label>
                           <button className="adm-btn adm-btn-sm" type="submit">Save</button>
                         </ActionForm>
+                      </td>
+                      <td>
+                        {store.isDemo ? (
+                          <span className="adm-muted">Example store</span>
+                        ) : checkout.ready ? (
+                          <ActionForm action={setCheckoutMode} className="adm-row-actions">
+                            <input type="hidden" name="slug" value={store.slug} />
+                            <select
+                              className="adm-select adm-select-sm"
+                              name="mode"
+                              defaultValue={checkout.modes.get(store.slug) ?? "off"}
+                              aria-label={`Checkout for ${store.name}`}
+                            >
+                              {CHECKOUT_MODES.map(mode => <option key={mode.value} value={mode.value}>{mode.label}</option>)}
+                            </select>
+                            <button className="adm-btn adm-btn-sm" type="submit">Save</button>
+                          </ActionForm>
+                        ) : (
+                          <span className="adm-muted">Off</span>
+                        )}
                       </td>
                       <td>
                         <div className="adm-row-actions">

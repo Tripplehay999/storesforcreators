@@ -48,5 +48,5 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   // Refresh the session on every page request, skipping static assets.
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|templates/|.*\\.(?:png|jpg|jpeg|webp|svg)$).*)"]
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|manifest.webmanifest|templates/|.*\\.(?:png|jpg|jpeg|webp|svg)$).*)"]
 };

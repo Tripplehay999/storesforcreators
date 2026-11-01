@@ -20,8 +20,8 @@ export type OverviewProps = {
   recentOrders: Order[];
   products: Product[];
   now?: Date;
-  /** AI ideas: shown when switched on; `adminHint` explains setup to admins when it isn't. */
-  ai: { enabled: boolean; initial: { payload: Recommendations; createdAt: string } | null; adminHint: string | null };
+  /** AI ideas: the card only appears once the feature is available. */
+  ai: { enabled: boolean; initial: { payload: Recommendations; createdAt: string } | null };
 };
 
 const CHART_METRICS = [
@@ -149,14 +149,7 @@ export default function OverviewView({
         </div>
       </div>
 
-      {ai.enabled ? (
-        <IdeasCard viewingStore={isOwnStore ? undefined : store.slug} initial={ai.initial} />
-      ) : ai.adminHint ? (
-        <section className="card ideas ideas-setup">
-          <h2 className="ideas-title"><Icon name="sparkles" size={18} /> AI ideas are off</h2>
-          <p className="muted">{ai.adminHint}</p>
-        </section>
-      ) : null}
+      {ai.enabled && <IdeasCard viewingStore={isOwnStore ? undefined : store.slug} initial={ai.initial} />}
 
       <div className="grid-main">
         <section className="card card-flush">

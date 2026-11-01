@@ -13,8 +13,9 @@ export type AuthState = {
   values?: Record<string, string>;
 };
 
+// Setup instructions belong in the README and server logs, never on the login page.
 const NOT_CONFIGURED: AuthState = {
-  error: "Creator accounts aren't connected yet. Add your Supabase keys to .env.local."
+  error: "Accounts aren't available right now. Please try again in a few minutes."
 };
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;

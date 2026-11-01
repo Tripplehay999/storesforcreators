@@ -32,7 +32,7 @@ async function underLimit(storeSlug: string, kind: keyof typeof DAILY_LIMITS) {
     .eq("kind", kind)
     .gte("created_at", new Date(Date.now() - DAY).toISOString());
 
-  if (isMissingSchema(error)) return "AI ideas need the latest database update (migration 004).";
+  if (isMissingSchema(error)) return "Ideas aren't available yet. Please try again later.";
   if (error) return "Couldn't check your AI usage. Please try again.";
   if ((count ?? 0) >= DAILY_LIMITS[kind]) return "You've used today's AI requests for this store. More tomorrow!";
   return null;
@@ -123,7 +123,7 @@ async function storeContext(store: Store) {
 }
 
 export async function generateIdeas(storeSlug: string | undefined, focus: string): Promise<AiResult<Recommendations>> {
-  if (!aiConfigured()) return { ok: false, error: "AI ideas aren't switched on for this site yet." };
+  if (!aiConfigured()) return { ok: false, error: "Ideas aren't available right now." };
 
   const access = await authorise(storeSlug);
   if (!access) return { ok: false, error: "You can only get ideas for your own store." };
@@ -148,7 +148,7 @@ export async function generateIdeas(storeSlug: string | undefined, focus: string
 const PLATFORMS = ["tiktok", "instagram", "x", "youtube", "email"] as const;
 
 export async function generateCaptions(productId: string, platforms: string[], discountCode: string): Promise<AiResult<Captions>> {
-  if (!aiConfigured()) return { ok: false, error: "AI captions aren't switched on for this site yet." };
+  if (!aiConfigured()) return { ok: false, error: "Captions aren't available right now." };
 
   const session = await getSession();
   if (!session || session.profile.suspended) return { ok: false, error: "Please log in again." };
