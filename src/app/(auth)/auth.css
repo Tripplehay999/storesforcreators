@@ -393,6 +393,21 @@
   background: #f6f2ea;
 }
 
+.au-legal {
+  margin-top: 18px !important;
+  color: var(--au-muted);
+  font-size: 13px;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.au-legal a {
+  color: var(--au-ink);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 .au-switch {
   margin-top: 26px !important;
   color: var(--au-muted);

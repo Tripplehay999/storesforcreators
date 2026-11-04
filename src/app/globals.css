@@ -683,6 +683,37 @@ input[type="range"]::-moz-range-thumb {
   font-size: 10px;
 }
 
+.footer-legal {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+}
+
+.footer-legal a {
+  color: #cfc2d4;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.footer-legal a:hover {
+  color: #fff;
+  text-decoration: underline;
+}
+
+/* Agreement line above the apply form's submit button. */
+.form-legal {
+  margin: 4px 0 12px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.form-legal a {
+  color: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+}
+
 .footer-bottom button {
   padding: 0;
   border: 0;

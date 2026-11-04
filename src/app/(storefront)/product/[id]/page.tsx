@@ -130,6 +130,11 @@ export default async function ProductPage({ params, searchParams }: Props) {
                 )}
               </ul>
             )}
+            {canBuy && (
+              <p className="sf-terms">
+                By buying, you agree to our <Link href="/terms#refunds">Terms</Link>, including the refund policy.
+              </p>
+            )}
           </div>
 
           {product.description && (

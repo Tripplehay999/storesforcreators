@@ -25,6 +25,11 @@ export default function SignupPage() {
         ]}
       />
 
+      <p className="au-legal">
+        By creating an account, you agree to our <Link href="/terms">Terms</Link> and{" "}
+        <Link href="/privacy">Privacy Policy</Link>.
+      </p>
+
       <p className="au-switch">Already have an account? <Link href="/login">Log in</Link></p>
     </>
   );

@@ -618,6 +618,25 @@
   font-size: 14px;
 }
 
+.sf-foot-legal {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+}
+
+.sf-foot-legal a,
+.sf-terms a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.sf-terms {
+  margin: 14px 0 0;
+  color: var(--sf-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
 .sf-powered {
   display: inline-flex;
   align-items: center;

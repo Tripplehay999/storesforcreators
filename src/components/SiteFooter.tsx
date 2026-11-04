@@ -26,6 +26,10 @@ export default function SiteFooter() {
 
       <div className="container footer-bottom">
         <span>© {new Date().getFullYear()} Stores for Creators</span>
+        <nav className="footer-legal" aria-label="Legal">
+          <Link href="/privacy">Privacy Policy</Link>
+          <Link href="/terms">Terms &amp; Conditions</Link>
+        </nav>
       </div>
     </footer>
   );

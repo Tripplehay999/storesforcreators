@@ -99,6 +99,7 @@ npm run dev                  # http://localhost:3000
    | `003_user_management.sql` | Account suspension, balance adjustments, admin notes. |
    | `004_growth.sql` | Keeps revenue splits private, payout details, Stripe order fields, the private `product-files` bucket, discount codes, visit analytics, payout requests, AI history. |
    | `005_checkout_switch.sql` | The per-store checkout switch (Off / Testing / On) that admins use to open buying one store at a time. |
+   | `006_store_balances_invoker.sql` | Makes the balances view run with each user's own permissions (clears Supabase's "security definer view" warning). |
 
    Until a migration is run, the features that need it simply say they aren't available yet.
 

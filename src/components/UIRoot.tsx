@@ -245,6 +245,10 @@ export default function UIRoot({ signedIn }: { signedIn: boolean }) {
             <textarea name="message" rows={3} placeholder="Tell us about your audience and ideas" />
           </label>
 
+          <p className="form-legal">
+            By applying, you agree to our <a href="/terms">Terms</a> and <a href="/privacy">Privacy Policy</a>.
+          </p>
+
           <button className="btn btn-dark" type="submit" disabled={sending}>
             {sending ? "Sending…" : signedIn ? "Send application" : "Create account and apply"}
           </button>
