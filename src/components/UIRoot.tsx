@@ -1,7 +1,8 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { submitApplication, type ApplicationState } from "@/app/actions";
 import { BRAND_NAME } from "@/lib/format";
 import { showInfo, toast } from "@/lib/ui";
@@ -246,7 +247,7 @@ export default function UIRoot({ signedIn }: { signedIn: boolean }) {
           </label>
 
           <p className="form-legal">
-            By applying, you agree to our <a href="/terms">Terms</a> and <a href="/privacy">Privacy Policy</a>.
+            By applying, you agree to our <Link href="/terms">Terms</Link> and <Link href="/privacy">Privacy Policy</Link>.
           </p>
 
           <button className="btn btn-dark" type="submit" disabled={sending}>
@@ -256,7 +257,7 @@ export default function UIRoot({ signedIn }: { signedIn: boolean }) {
           <p id="apply-status" className={`form-status${application.status === "error" ? " form-error" : ""}`}>
             {application.message || (signedIn
               ? "We'll review your details and reply by email."
-              : <>Already have an account? <a href="/login">Log in</a></>)}
+              : <>Already have an account? <Link href="/login">Log in</Link></>)}
           </p>
 
           {application.status === "error" && (

@@ -4,7 +4,13 @@ out
 build
 *.tsbuildinfo
 next-env.d.ts
-.env*.local
-.env
+# Env files hold real keys: never commit them (only the empty template)
+.env*
+!.env.example
 .vercel
 supabase/.temp
+
+# AI assistant files stay on this computer
+.claude/
+CLAUDE.md
+CLAUDE.local.md

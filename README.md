@@ -32,7 +32,8 @@ Resend for email, and Claude for AI suggestions.
 
 **Public site**
 - Home page with live example stores, an earnings calculator and an apply form.
-- A store page for every creator (`/store/[slug]`) and a page for every product (`/product/[id]`), with the
+- A store page for every creator at `storesforcreators.com/<their-name>` (`/[slug]`; old `/store/<name>` links
+  redirect there) and a page for every product (`/product/[id]`), with the
   creator's own header, a featured product, Buy buttons right on the store, and a buy bar that stays on
   screen on phones.
 - Real checkout through Stripe, opened one store at a time; discount codes at checkout; instant, private
@@ -107,6 +108,7 @@ npm run dev                  # http://localhost:3000
    | `005_checkout_switch.sql` | The per-store checkout switch (Off / Testing / On) that admins use to open buying one store at a time. |
    | `006_store_balances_invoker.sql` | Makes the balances view run with each user's own permissions (clears Supabase's "security definer view" warning). |
    | `007_onboarding_emails.sql` | The "Tips and reminders" email switch, and a log so nobody gets the same onboarding email twice. |
+   | `008_split_and_store_links.sql` | The 70/30 standard split (new stores start at 70%; stores still on 50% move to 70%), and keeps store names from clashing with the site's own pages. |
 
    Until a migration is run, the features that need it simply say they aren't available yet.
 

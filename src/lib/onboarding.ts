@@ -73,7 +73,7 @@ function buildEmail(kind: OnboardingKind, candidate: Candidate, site: string): E
       case "nudge-store": return nudgeStoreEmail(base);
       case "nudge-product": return nudgeProductEmail({ ...base, storeName });
       case "nudge-publish": return nudgePublishEmail({ ...base, storeName, productCount: candidate.product_count ?? 0 });
-      case "nudge-share": return nudgeShareEmail({ ...base, storeName, storeUrl: storeUrl(site, candidate.store_slug) });
+      case "nudge-share": return nudgeShareEmail({ ...base, storeName, storeUrl: storeUrl(site, candidate.store_slug ?? "") });
     }
   })();
 
