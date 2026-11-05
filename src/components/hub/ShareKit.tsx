@@ -4,6 +4,7 @@ import QRCode from "qrcode";
 import { useEffect, useState } from "react";
 import { toast } from "@/lib/ui";
 import Icon from "./Icon";
+import { storePath } from "@/lib/store-links";
 
 const PLATFORMS = [
   { id: "tiktok", label: "TikTok" },
@@ -27,7 +28,7 @@ export default function ShareKit({ siteUrl, storeSlug, storeName, products }: Pr
   const [platform, setPlatform] = useState("tiktok");
   const [qr, setQr] = useState("");
 
-  const path = target ? `/product/${encodeURIComponent(target)}?creator=${encodeURIComponent(storeSlug)}&src=${platform}` : `/store/${storeSlug}?src=${platform}`;
+  const path = target ? `/product/${encodeURIComponent(target)}?creator=${encodeURIComponent(storeSlug)}&src=${platform}` : `${storePath(storeSlug)}?src=${platform}`;
   const url = `${siteUrl}${path}`;
   const label = target ? products.find(product => product.id === target)?.name ?? "Product" : storeName;
 

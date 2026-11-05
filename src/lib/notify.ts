@@ -16,7 +16,7 @@ export function sendLater(email: Email | null | (() => Promise<Email | null>)) {
   });
 }
 
-export type Contact = { email: string; name: string; wantsEmail: boolean };
+export type Contact = { id: string; email: string; name: string; wantsEmail: boolean };
 
 /** The store owner's email and preferences. Needs a client allowed to read their profile (admin or service role). */
 export async function storeOwnerContact(client: SupabaseClient, storeSlug: string): Promise<Contact | null> {
@@ -32,9 +32,20 @@ export async function storeOwnerContact(client: SupabaseClient, storeSlug: strin
   if (!profile?.email) return null;
 
   return {
+    id: profile.id,
     email: profile.email,
     name: profile.full_name ?? "",
     // Older databases (before migration 004) have no preference column: default to on.
     wantsEmail: profile.email_notifications !== false
   };
+}
+
+/** How many completed orders a store has, to spot its first sale. Needs a client that can read them. */
+export async function completedOrderCount(client: SupabaseClient, storeSlug: string) {
+  const { count } = await client
+    .from("orders")
+    .select("id", { count: "exact", head: true })
+    .eq("store_slug", storeSlug)
+    .eq("status", "completed");
+  return count ?? 0;
 }

@@ -2,11 +2,14 @@ import { randomBytes } from "node:crypto";
 import { NextResponse, type NextRequest } from "next/server";
 import { DOWNLOAD_DAYS } from "@/lib/downloads";
 import { newSaleEmail, receiptEmail } from "@/lib/email-templates";
-import { sendLater, storeOwnerContact } from "@/lib/notify";
+import { emailLinks } from "@/lib/email-links";
+import { STANDARD_CREATOR_SHARE } from "@/lib/format";
+import { completedOrderCount, sendLater, storeOwnerContact } from "@/lib/notify";
 import { isMissingSchema } from "@/lib/schema";
 import { siteUrl } from "@/lib/site";
 import { stripeConfigured, verifyWebhook, type CheckoutSession } from "@/lib/stripe";
 import { createServiceClient, hasServiceRole } from "@/lib/supabase/admin";
+import { storeUrl } from "@/lib/store-links";
 
 // Stripe → us. Point a webhook at /api/stripe/webhook for:
 // checkout.session.completed, checkout.session.async_payment_succeeded, charge.refunded.
@@ -66,7 +69,7 @@ async function fulfil(session: CheckoutSession) {
   if (fileResult.error && !isMissingSchema(fileResult.error)) throw fileResult.error;
 
   const amount = (session.amount_total ?? 0) / 100;
-  const share = Number(store.revenue_share ?? 50);
+  const share = Number(store.revenue_share ?? STANDARD_CREATOR_SHARE);
   const creatorAmount = Math.round(amount * share) / 100;
   const token = fileResult.data ? randomBytes(24).toString("base64url") : null;
   const productName = product?.name ?? "Order";
@@ -106,7 +109,7 @@ async function fulfil(session: CheckoutSession) {
         storeName: store.name,
         amount,
         downloadUrl: token ? `${site}/download/${token}` : undefined,
-        storeUrl: `${site}/store/${store.slug}`
+        storeUrl: storeUrl(site, store.slug)
       })
     });
   }
@@ -114,10 +117,20 @@ async function fulfil(session: CheckoutSession) {
   sendLater(async () => {
     const owner = await storeOwnerContact(db, store.slug);
     if (!owner?.wantsEmail) return null;
+    const first = (await completedOrderCount(db, store.slug)) === 1;
     return {
       to: owner.email,
       idempotencyKey: `sale-${session.id}`,
-      ...newSaleEmail({ name: owner.name, storeName: store.name, productName, amount, share: creatorAmount, dashboardUrl: `${site}/dashboard/earnings` })
+      ...newSaleEmail({
+        name: owner.name,
+        storeName: store.name,
+        productName,
+        amount,
+        share: creatorAmount,
+        dashboardUrl: `${site}/dashboard/earnings`,
+        first,
+        manage: emailLinks(site, owner.id, "sales")
+      })
     };
   });
 }

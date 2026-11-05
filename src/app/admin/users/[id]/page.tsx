@@ -13,6 +13,7 @@ import {
 import { adminOnly, getProducts } from "@/lib/data";
 import { money, number, shortDate } from "@/lib/format";
 import { hasServiceRole } from "@/lib/supabase/admin";
+import { storePath } from "@/lib/store-links";
 import {
   addAdjustment,
   addNote,
@@ -213,7 +214,7 @@ export default async function AdminUserPage({ params }: Props) {
               <h2>Store</h2>
               {user.store && (
                 <div className="adm-toolbar">
-                  <Link className="adm-btn adm-btn-sm adm-btn-ghost" href={`/store/${user.store.slug}`} target="_blank">View</Link>
+                  <Link className="adm-btn adm-btn-sm adm-btn-ghost" href={storePath(user.store.slug)} target="_blank">View</Link>
                   <Link className="adm-btn adm-btn-sm adm-btn-ghost" href={`/dashboard?store=${user.store.slug}`}>Hub</Link>
                   <Link className="adm-btn adm-btn-sm" href={`/dashboard/products?store=${user.store.slug}`}>Products</Link>
                 </div>
@@ -236,7 +237,7 @@ export default async function AdminUserPage({ params }: Props) {
                     <input type="checkbox" name="published" defaultChecked={balance.published} />
                     Store is public
                   </label>
-                  <p className="full adm-muted adm-mono">/store/{balance.slug}</p>
+                  <p className="full adm-muted adm-mono">{storePath(balance.slug)}</p>
                   <div className="full"><button className="adm-btn adm-btn-primary" type="submit">Save store</button></div>
                 </ActionForm>
               </div>

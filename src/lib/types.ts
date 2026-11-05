@@ -57,6 +57,8 @@ export type Profile = {
   payoutMethod: "" | "paypal" | "etransfer" | "bank" | "other";
   payoutDetails: string;
   emailNotifications: boolean;
+  /** Tips and reminders while setting up (migration 007). */
+  tipsEmails: boolean;
 };
 
 export type Application = {

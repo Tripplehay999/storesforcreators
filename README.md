@@ -17,6 +17,8 @@ Resend for email, and Claude for AI suggestions.
 - [Set up Supabase](#set-up-supabase)
 - [Turn on payments (Stripe)](#turn-on-payments-stripe)
 - [Turn on email (Resend)](#turn-on-email-resend)
+- [Set up your email addresses (partnerships@, support@)](#set-up-your-email-addresses-partnerships-support)
+- [Onboarding emails](#onboarding-emails)
 - [Turn on AI ideas (Anthropic)](#turn-on-ai-ideas-anthropic)
 - [Deploy (Vercel + Cloudflare)](#deploy-vercel--cloudflare)
 - [How it fits together](#how-it-fits-together)
@@ -51,8 +53,10 @@ Resend for email, and Claude for AI suggestions.
 **Admin panel** (`/admin`, admins only; everyone else gets a 404): users, stores, products, orders,
 payouts and payout requests, applications, balance adjustments, notes, and CSV exports.
 
-**Emails**: sale alerts, buyer receipts with download links, payout updates, application decisions,
-"store is live", plus branded templates for Supabase's sign-up, login-link and password-reset emails.
+**Emails**: a welcome email and short setup tips for new creators, sale alerts (with a special first-sale
+email), buyer receipts with download links, payout updates, application decisions, "store is live", plus
+branded templates for Supabase's sign-up, login-link and password-reset emails. Optional emails have
+one-click unsubscribe. **Admin → Emails** checks your email setup live, previews every email and sends tests.
 
 Each integration switches itself off cleanly until its keys are added, so the site works from day one
 with only Supabase configured.
@@ -83,6 +87,8 @@ npm run dev                  # http://localhost:3000
 | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` | For payments | See [payments](#turn-on-payments-stripe). |
 | `RESEND_API_KEY`, `EMAIL_FROM` | For email | See [email](#turn-on-email-resend). `EMAIL_REPLY_TO` is optional. |
 | `ADMIN_EMAILS` | No | Comma-separated addresses alerted about new applications and payout requests. |
+| `CRON_SECRET` | For onboarding emails | Any long random text. Switches on the daily onboarding run. See [onboarding emails](#onboarding-emails). |
+| `EMAIL_LINK_SECRET` | No | Signs the Unsubscribe / Email settings links. Defaults to the service role key. |
 | `ANTHROPIC_API_KEY` | For AI | See [AI ideas](#turn-on-ai-ideas-anthropic). |
 
 ---
@@ -100,6 +106,7 @@ npm run dev                  # http://localhost:3000
    | `004_growth.sql` | Keeps revenue splits private, payout details, Stripe order fields, the private `product-files` bucket, discount codes, visit analytics, payout requests, AI history. |
    | `005_checkout_switch.sql` | The per-store checkout switch (Off / Testing / On) that admins use to open buying one store at a time. |
    | `006_store_balances_invoker.sql` | Makes the balances view run with each user's own permissions (clears Supabase's "security definer view" warning). |
+   | `007_onboarding_emails.sql` | The "Tips and reminders" email switch, and a log so nobody gets the same onboarding email twice. |
 
    Until a migration is run, the features that need it simply say they aren't available yet.
 
@@ -107,7 +114,9 @@ npm run dev                  # http://localhost:3000
    `https://your-domain/auth/callback` and `http://localhost:3000/auth/callback` to **Redirect URLs**.
 
 4. **Branded auth emails.** *Authentication → Emails → Templates*: paste each file from
-   `supabase/templates/` into the matching template:
+   `supabase/templates/` into the matching template. The easy way is **Admin → Emails → Copy for Supabase**
+   next to each one. They use the same design as the site's own emails (`src/lib/email-templates.ts`), so
+   paste them again whenever that design changes:
 
    | Template | File | Suggested subject |
    | --- | --- | --- |
@@ -175,12 +184,72 @@ Download links work for 30 days and 5 downloads. A full refund in Stripe marks t
 ## Turn on email (Resend)
 
 1. Create an account at [resend.com](https://resend.com), verify your sending domain, and create an API key.
-2. Set `RESEND_API_KEY` and `EMAIL_FROM` (for example `Stores for Creators <hello@yourdomain.com>`).
-3. Optional: `EMAIL_REPLY_TO` and `ADMIN_EMAILS`.
+2. Set `RESEND_API_KEY` and `EMAIL_FROM` (for example `Stores for Creators <hello@storesforcreators.com>`).
+3. Optional: `EMAIL_REPLY_TO` (for example `support@storesforcreators.com`) and `ADMIN_EMAILS`.
 
-Emails sent by the app: sale alerts to creators (they can switch these off), receipts and downloads to
-buyers, payout sent, payout requested (to admins), new application (to admins), application received and
-decision (to applicants), and "your store is live". Without these keys, emails are skipped and logged.
+Emails sent by the app: welcome and setup tips to new creators, sale alerts to creators (a special one for
+their first sale), receipts and downloads to buyers, payout sent, payout requested (to admins), new
+application (to admins), application received and decision (to applicants), and "your store is live".
+Without these keys, emails are skipped and logged.
+
+Creators choose what they get under *Storefront → Your account → Emails*, or from the **Email settings**
+link at the bottom of any optional email (no login needed; the link is signed for their account). Receipts,
+password resets and other account emails can't be switched off.
+
+**Admin → Emails** shows, live, whether each part of the setup is working (sending, domain verification,
+receiving mail, SPF, DMARC, the daily run), previews every email, and can send you a test of any of them.
+
+---
+
+## Set up your email addresses (partnerships@, support@)
+
+The addresses live in `src/lib/contact.ts`: **partnerships@** (brand deals and collaborations, shown in the
+site footer and the "you're in" email), **support@** (help; on the Privacy Policy, Terms and every email)
+and **hello@** (the sender). The domain's DNS is on Cloudflare, so the free route is:
+
+1. **Receive mail (Cloudflare Email Routing).** Cloudflare → *storesforcreators.com* → *Email → Email
+   Routing* → *Get started*, and let it add its records. Add your own inbox under *Destination addresses*
+   and verify it. Under *Routing rules → Custom addresses*, create `partnerships`, `support` and `hello`,
+   each "Send to an email" → your inbox.
+2. **Send from the domain (Resend).** Resend → *Domains* → add `storesforcreators.com`, add the records it
+   shows in Cloudflare → *DNS*, and verify. Then set the email variables above in Vercel and redeploy.
+3. **DMARC.** Cloudflare → *DNS* → add a TXT record named `_dmarc` with `v=DMARC1; p=none;`.
+4. **Reply as partnerships@ from Gmail (optional).** Gmail → *Settings → Accounts and Import → Send mail as
+   → Add another email address*: SMTP server `smtp.resend.com`, port 465 (SSL), username `resend`,
+   password = your Resend API key. Gmail emails a code to partnerships@, which arrives in your inbox.
+5. **Supabase's emails.** Point Supabase's SMTP at Resend (see [Set up Supabase](#set-up-supabase), step 5)
+   with `hello@storesforcreators.com` as the sender.
+6. **Your logo (optional).** The site's emails already show the logo, loaded from the live site
+   (`LOGO` in `src/lib/contact.ts`). For your own Gmail emails, *Admin → Emails → Your logo in emails*
+   builds a signature with the logo to copy into Gmail. It also has the steps to show the logo next to
+   your name in Gmail inboxes: a free Google account for each address, with the logo as its photo.
+
+Then press **Send a test** next to each address on *Admin → Emails*. A new address is two steps: add it to
+`src/lib/contact.ts` and create the same address in Cloudflare (or turn on Cloudflare's catch-all rule).
+
+---
+
+## Onboarding emails
+
+| Email | When |
+| --- | --- |
+| Welcome | As soon as a creator confirms their email |
+| Create your store | 2 days after signing up, if they have no store |
+| Add your first product | 2 days after making their store, if it has no products |
+| Your store is hidden | 3 days after making their store, if it has products but is hidden |
+| Get your first sale | 5 days after making their store, if it's public with products but no sales |
+| Your store is live | The first time their store is public |
+
+Each person gets each email at most once, at most one follow-up every 2 days, and only while that step is
+still undone. Only confirmed, active creators who joined in the last 30 days and kept "Tips and reminders"
+on are included. The follow-ups need:
+
+1. `supabase/migrations/007_onboarding_emails.sql` run in Supabase.
+2. `SUPABASE_SERVICE_ROLE_KEY` and the Resend variables set.
+3. `CRON_SECRET` set in Vercel. `vercel.json` schedules `/api/cron/onboarding` daily at 15:00 UTC (about
+   10 am Toronto time); Vercel sends the secret with each run, and the route refuses requests without it.
+
+*Admin → Emails* lists who is due an email now, what was sent recently, and has a **Send due emails now** button.
 
 ---
 
@@ -250,7 +319,7 @@ src/
     (auth)/        login, signup, password reset (+ server actions)
     dashboard/     creator hub pages and server actions (incl. AI actions)
     admin/         admin panel pages and actions
-    api/           checkout and Stripe webhook
+    api/           checkout, Stripe webhook, daily onboarding run, one-click unsubscribe
     auth/          email-link callback, sign out
   components/
     hub/           creator hub UI (shell, charts, tour, ideas, share kit, store link, FAQ editor…)
@@ -275,3 +344,4 @@ supabase/
 | `npm run build` | Production build (also type-checks). |
 | `npm run start` | Serve the production build. |
 | `npm run lint` | Lint the code. |
+| `npm run email:templates` | Rewrite `supabase/templates/*.html` from `src/lib/auth-email-templates.ts` (run after changing the email design). |

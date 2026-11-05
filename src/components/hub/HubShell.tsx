@@ -8,6 +8,7 @@ import LogoMark from "@/components/LogoMark";
 import Icon from "./Icon";
 import ThemeToggle from "./ThemeToggle";
 import TourButton from "./TourButton";
+import { storePath } from "@/lib/store-links";
 import "@/app/dashboard/hub.css";
 
 type Props = { profile: Profile; store: Store | null; theme: HubTheme; children: React.ReactNode };
@@ -82,7 +83,7 @@ export default function HubShell({ profile, store, theme, children }: Props) {
         </Suspense>
 
         {store && (
-          <a className="app-nav-external" href={`/store/${store.slug}`} target="_blank" rel="noreferrer" data-tour="view-store">
+          <a className="app-nav-external" href={storePath(store.slug)} target="_blank" rel="noreferrer" data-tour="view-store">
             <Icon name="external" size={16} /> View storefront
           </a>
         )}
@@ -100,7 +101,7 @@ export default function HubShell({ profile, store, theme, children }: Props) {
           {store && (
             <a
               className="app-icon-button"
-              href={`/store/${store.slug}`}
+              href={storePath(store.slug)}
               target="_blank"
               rel="noreferrer"
               aria-label="View storefront"

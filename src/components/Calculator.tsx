@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type CSSProperties } from "react";
-import { money, number } from "@/lib/format";
+import { money, number, STANDARD_CREATOR_SHARE } from "@/lib/format";
 
 type Values = {
   followers: number;
@@ -24,7 +24,7 @@ const sliders: {
   { key: "reach", id: "calc-reach", label: "Monthly store visitors as % of followers", min: 1, max: 30, step: 0.5, format: v => v.toFixed(1) + "%" },
   { key: "rate", id: "calc-rate", label: "Visitors who purchase", min: 0.5, max: 10, step: 0.5, format: v => v.toFixed(1) + "%" },
   { key: "price", id: "calc-price", label: "Average order value", min: 9, max: 109, step: 1, format: v => money(v) },
-  { key: "split", id: "calc-split", label: "Your creator share", min: 50, max: 80, step: 5, format: v => Math.round(v) + "%" }
+  { key: "split", id: "calc-split", label: "Your creator share", min: STANDARD_CREATOR_SHARE, max: 90, step: 5, format: v => Math.round(v) + "%" }
 ];
 
 const presets = [25000, 50000, 100000, 250000, 500000];
@@ -35,7 +35,7 @@ export default function Calculator() {
     reach: 12,
     rate: 3.5,
     price: 29,
-    split: 50
+    split: STANDARD_CREATOR_SHARE
   });
 
   const split = values.split / 100;

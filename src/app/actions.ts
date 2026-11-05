@@ -1,9 +1,11 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { after } from "next/server";
 import { adminEmails } from "@/lib/email";
 import { applicationReceivedEmail, newApplicationEmail } from "@/lib/email-templates";
 import { sendLater } from "@/lib/notify";
+import { WELCOME_PATH, sendWelcome } from "@/lib/onboarding";
 import { siteUrl } from "@/lib/site";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/server";
 
@@ -61,7 +63,7 @@ export async function submitApplication(
       password,
       options: {
         data: { full_name: application.name, social_handle: application.social_profile },
-        emailRedirectTo: `${await siteUrl()}/auth/callback?next=${encodeURIComponent("/dashboard?notice=welcome")}`
+        emailRedirectTo: `${await siteUrl()}/auth/callback?next=${encodeURIComponent(WELCOME_PATH)}`
       }
     });
 
@@ -104,8 +106,13 @@ export async function submitApplication(
     });
   }
 
-  // Brand-new account with an active session → straight into the creator hub.
-  if (isNewAccount && signedIn) redirect("/dashboard?notice=welcome");
+  // Brand-new account with an active session (email confirmation off) → welcome them and go
+  // straight into the creator hub. Otherwise the welcome goes out when they confirm their email.
+  if (isNewAccount && signedIn && user) {
+    const newUser = { id: user.id, email: application.email, name: application.name };
+    after(() => sendWelcome(newUser, site).catch(err => console.error("[welcome] couldn't send:", err)));
+    redirect(WELCOME_PATH);
+  }
 
   if (!isNewAccount) {
     return { status: "sent", message: "Application received. We'll be in touch by email." };

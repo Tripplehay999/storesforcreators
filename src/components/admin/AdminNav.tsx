@@ -10,7 +10,8 @@ const items: { href: string; label: string; icon: string; badge?: "applications"
   { href: "/admin/products", label: "Products", icon: "▦" },
   { href: "/admin/orders", label: "Orders", icon: "≡" },
   { href: "/admin/payouts", label: "Payouts", icon: "$", badge: "payouts" },
-  { href: "/admin/applications", label: "Applications", icon: "✉", badge: "applications" }
+  { href: "/admin/applications", label: "Applications", icon: "✉", badge: "applications" },
+  { href: "/admin/emails", label: "Emails", icon: "@" }
 ];
 
 export default function AdminNav({ badges }: { badges: { applications: number; payouts: number } }) {

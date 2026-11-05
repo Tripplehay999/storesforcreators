@@ -4,13 +4,16 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getStoreBalance } from "@/lib/admin-data";
 import { requireAdmin } from "@/lib/data";
-import { money } from "@/lib/format";
+import { money, STANDARD_CREATOR_SHARE } from "@/lib/format";
 import { siteUrl } from "@/lib/site";
 import { applicationDecisionEmail, newSaleEmail, payoutSentEmail } from "@/lib/email-templates";
-import { sendLater, storeOwnerContact } from "@/lib/notify";
+import { emailConfigured } from "@/lib/email";
+import { emailLinks } from "@/lib/email-links";
+import { completedOrderCount, sendLater, storeOwnerContact } from "@/lib/notify";
 import { isMissingSchema } from "@/lib/schema";
 import { createServiceClient, hasServiceRole } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import { storePath } from "@/lib/store-links";
 
 export type AdminState = { ok?: boolean; error?: string; message?: string };
 
@@ -69,7 +72,7 @@ export async function updateStore(_prev: AdminState, formData: FormData): Promis
 
   refresh();
   revalidatePath("/");
-  revalidatePath(`/store/${slug}`);
+  revalidatePath(storePath(slug));
   return { ok: true, message: `Saved ${slug}.` };
 }
 
@@ -94,7 +97,7 @@ export async function setCheckoutMode(_prev: AdminState, formData: FormData): Pr
   }
 
   refresh();
-  revalidatePath(`/store/${slug}`);
+  revalidatePath(storePath(slug));
   const label = mode === "on" ? "open to everyone" : mode === "testing" ? "in testing (only admins and the creator can buy)" : "off";
   return { ok: true, message: `Checkout for ${slug} is ${label}.` };
 }
@@ -149,7 +152,7 @@ export async function recordOrder(_prev: AdminState, formData: FormData): Promis
   if (!product) return { error: "Choose a product." };
 
   const balance = await getStoreBalance(product.store_slug);
-  const share = balance?.revenueShare ?? 50;
+  const share = balance?.revenueShare ?? STANDARD_CREATOR_SHARE;
 
   const { error } = await supabase.from("orders").insert({
     store_slug: product.store_slug,
@@ -175,7 +178,9 @@ export async function recordOrder(_prev: AdminState, formData: FormData): Promis
         productName: product.name,
         amount,
         share: creatorAmount,
-        dashboardUrl: `${site}/dashboard/earnings`
+        dashboardUrl: `${site}/dashboard/earnings`,
+        first: (await completedOrderCount(supabase, product.store_slug)) === 1,
+        manage: emailLinks(site, owner.id, "sales")
       })
     };
   });
@@ -230,7 +235,10 @@ async function notifyPayoutSent(storeSlug: string, amount: number, method: strin
   sendLater(async () => {
     const owner = await storeOwnerContact(supabase, storeSlug);
     if (!owner?.wantsEmail) return null;
-    return { to: owner.email, ...payoutSentEmail({ name: owner.name, amount, method, reference, dashboardUrl: `${site}/dashboard/earnings` }) };
+    return {
+      to: owner.email,
+      ...payoutSentEmail({ name: owner.name, amount, method, reference, dashboardUrl: `${site}/dashboard/earnings`, manage: emailLinks(site, owner.id, "sales") })
+    };
   });
 }
 
@@ -281,7 +289,7 @@ export async function resolvePayoutRequest(_prev: AdminState, formData: FormData
 
   await notifyPayoutSent(request.store_slug, amount, method, reference);
   refresh();
-  return { ok: true, message: `Paid ${money(amount, 2)}. We've emailed the creator.` };
+  return { ok: true, message: `Paid ${money(amount, 2)}.${emailConfigured() ? " We've emailed the creator (if their sale emails are on)." : ""}` };
 }
 
 export async function createPayout(_prev: AdminState, formData: FormData): Promise<AdminState> {
@@ -381,7 +389,8 @@ export async function setApplicationStatus(_prev: AdminState, formData: FormData
   }
 
   refresh();
-  return { ok: true, message: `Application marked ${status}.${status === "accepted" || status === "declined" ? " We've emailed them." : ""}` };
+  const emailed = (status === "accepted" || status === "declined") && emailConfigured();
+  return { ok: true, message: `Application marked ${status}.${emailed ? " We've emailed them." : ""}` };
 }
 
 export async function deleteApplication(_prev: AdminState, formData: FormData): Promise<AdminState> {

@@ -672,6 +672,31 @@ input[type="range"]::-moz-range-thumb {
   font-size: 17px;
 }
 
+.footer-emails {
+  display: grid;
+  gap: 4px;
+  margin: 22px 0 0;
+  font-size: 12px;
+}
+
+.footer-emails dt {
+  color: #bcb0c2;
+}
+
+.footer-emails dd {
+  margin: 0 0 10px;
+  overflow-wrap: anywhere;
+}
+
+.footer-emails a {
+  color: #d4f57a;
+  font-weight: 700;
+}
+
+.footer-emails a:hover {
+  text-decoration: underline;
+}
+
 .footer-bottom {
   display: flex;
   justify-content: space-between;
@@ -1329,6 +1354,61 @@ input[type="range"]::-moz-range-thumb {
   font-weight: 600;
   text-decoration: underline;
   text-underline-offset: 3px;
+}
+
+/* Email settings page (opened from the links at the bottom of emails) */
+
+.prefs-form {
+  display: grid;
+  gap: 12px;
+  width: 100%;
+  margin-top: 6px;
+  text-align: left;
+}
+
+.prefs-option {
+  display: grid;
+  grid-template-columns: 22px 1fr;
+  gap: 12px;
+  align-items: start;
+  padding: 14px 16px;
+  border: 2px solid #1c1722;
+  border-radius: 14px;
+  background: #fbf8f2;
+  cursor: pointer;
+}
+
+.prefs-option input {
+  width: 20px;
+  height: 20px;
+  margin: 2px 0 0;
+  accent-color: #1c1722;
+}
+
+.prefs-option strong {
+  display: block;
+  color: var(--ink);
+}
+
+.prefs-option small {
+  display: block;
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.prefs-note {
+  font-size: 13px;
+}
+
+.prefs-ok {
+  color: #2f6b1f !important;
+  font-weight: 700;
+}
+
+.prefs-form .btn {
+  width: 100%;
 }
 
 /* ── SITE HEADER ──────────────────────────────────────────── */

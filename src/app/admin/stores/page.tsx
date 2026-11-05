@@ -6,6 +6,7 @@ import { emailConfigured } from "@/lib/email";
 import { money, number } from "@/lib/format";
 import { deleteStore, setCheckoutMode, updateStore } from "../actions";
 import { adminOnly } from "@/lib/data";
+import { storePath } from "@/lib/store-links";
 
 /** Plain-language status of the pieces checkout needs. Never shows keys or setting names. */
 function CheckoutSetup({ switchReady }: { switchReady: boolean }) {
@@ -105,7 +106,7 @@ export default async function AdminStoresPage() {
                       <td>
                         {store.name}
                         {store.isDemo && <span className="adm-pill" style={{ marginLeft: 6 }}>demo</span>}
-                        <span className="adm-sub adm-mono">/store/{store.slug}</span>
+                        <span className="adm-sub adm-mono">{storePath(store.slug)}</span>
                       </td>
                       <td>
                         {owner ? (
@@ -163,7 +164,7 @@ export default async function AdminStoresPage() {
                       </td>
                       <td>
                         <div className="adm-row-actions">
-                          <Link className="adm-btn adm-btn-sm adm-btn-ghost" href={`/store/${store.slug}`} target="_blank">View</Link>
+                          <Link className="adm-btn adm-btn-sm adm-btn-ghost" href={storePath(store.slug)} target="_blank">View</Link>
                           <Link className="adm-btn adm-btn-sm adm-btn-ghost" href={`/dashboard?store=${store.slug}`}>Hub</Link>
                           <ActionForm
                             action={deleteStore}

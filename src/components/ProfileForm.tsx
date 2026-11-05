@@ -9,7 +9,7 @@ export default function ProfileForm({ profile }: { profile: Profile }) {
   const [state, action, pending] = useActionState(saveProfile, {});
 
   return (
-    <form className="card" action={action}>
+    <form className="card" action={action} id="account">
       <div className="form-section">
         <div className="form-section-head">
           <h2>Your account</h2>
@@ -29,6 +29,31 @@ export default function ProfileForm({ profile }: { profile: Profile }) {
         <label className="field full">
           Email address
           <input value={profile.email} disabled />
+        </label>
+      </div>
+
+      <div className="form-section">
+        <div className="form-section-head">
+          <h2>Emails</h2>
+          <p>Receipts, password resets and other account emails always come through.</p>
+        </div>
+
+        <label className="toggle full">
+          <span>
+            <strong>Email me when I make a sale</strong>
+            <small>Plus an email when we send you a payout.</small>
+          </span>
+          <input name="email_notifications" type="checkbox" defaultChecked={profile.emailNotifications} />
+          <span className="switch" aria-hidden="true" />
+        </label>
+
+        <label className="toggle full">
+          <span>
+            <strong>Tips and reminders</strong>
+            <small>A few short emails while you set up, only for steps you haven&apos;t done yet.</small>
+          </span>
+          <input name="tips_emails" type="checkbox" defaultChecked={profile.tipsEmails} />
+          <span className="switch" aria-hidden="true" />
         </label>
       </div>
 

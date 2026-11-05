@@ -9,8 +9,13 @@ export type Email = {
   html: string;
   text: string;
   replyTo?: string;
-  /** Resend ignores a repeat send with the same key, so retries can't double-email someone. */
+  /** Resend ignores a repeat send with the same key (for 24 hours), so retries can't double-email someone. */
   idempotencyKey?: string;
+  /**
+   * For optional emails (sale alerts, tips): the one-click unsubscribe address. Adds the
+   * List-Unsubscribe headers that Gmail and Yahoo show as an "Unsubscribe" button and expect from senders.
+   */
+  unsubscribeUrl?: string;
 };
 
 export function emailConfigured() {
@@ -45,7 +50,13 @@ export async function sendEmail(email: Email): Promise<{ ok: boolean; error?: st
         subject: email.subject,
         html: email.html,
         text: email.text,
-        ...(email.replyTo || process.env.EMAIL_REPLY_TO ? { reply_to: email.replyTo ?? process.env.EMAIL_REPLY_TO } : {})
+        ...(email.replyTo || process.env.EMAIL_REPLY_TO ? { reply_to: email.replyTo ?? process.env.EMAIL_REPLY_TO } : {}),
+        ...(email.unsubscribeUrl ? {
+          headers: {
+            "List-Unsubscribe": `<${email.unsubscribeUrl}>`,
+            "List-Unsubscribe-Post": "List-Unsubscribe=One-Click"
+          }
+        } : {})
       })
     });
 

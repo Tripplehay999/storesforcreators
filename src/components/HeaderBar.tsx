@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { STANDARD_CREATOR_SHARE } from "@/lib/format";
 import Brand from "./Brand";
 
 const LINKS = [
@@ -137,7 +138,7 @@ export default function HeaderBar({ signedIn }: { signedIn: boolean }) {
 
         <p className="mobile-menu-note">
           <span className="mm-sticker" aria-hidden="true">$0</span>
-          No setup fee. Split agreed before you launch.
+          No setup fee. You keep {STANDARD_CREATOR_SHARE}% of every sale.
         </p>
       </div>
     </>

@@ -6,6 +6,7 @@ import { productImage, productPrice } from "@/lib/catalog";
 import { getCheckoutMode } from "@/lib/checkout";
 import { getProducts, requireSession } from "@/lib/data";
 import { siteUrl } from "@/lib/site";
+import { storeUrl } from "@/lib/store-links";
 
 export default async function StoreSettingsPage() {
   const { profile, store } = await requireSession();
@@ -33,7 +34,7 @@ export default async function StoreSettingsPage() {
 
       {store && (
         <StoreLinkCard
-          url={`${site}/store/${store.slug}`}
+          url={storeUrl(site, store.slug)}
           storeName={store.name}
           image={store.image}
           background={store.background}

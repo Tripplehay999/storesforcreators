@@ -15,6 +15,7 @@ import { chargeable, checkoutAccess, productsWithFiles, stripeTestMode } from "@
 import { getProduct, getStore } from "@/lib/data";
 import { emailConfigured } from "@/lib/email";
 import { shareableImage, SITE_SHARE_IMAGE, SITE_TWITTER_IMAGE } from "@/lib/share";
+import { storePath } from "@/lib/store-links";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -82,7 +83,7 @@ export default async function ProductPage({ params, searchParams }: Props) {
         </div>
 
         <div className="sf-product-info">
-          <Link className="sf-crumb" href={`/store/${store.slug}`}>
+          <Link className="sf-crumb" href={storePath(store.slug)}>
             <Icon name="left" size={15} /> {store.name}
           </Link>
           {product.category && <span className="sf-eyebrow">{product.category}</span>}

@@ -4,6 +4,8 @@ import DashboardPreview from "@/components/DashboardPreview";
 import SiteFooter from "@/components/SiteFooter";
 import { productImage, productLink, productPrice } from "@/lib/catalog";
 import { getProducts, getStores } from "@/lib/data";
+import { STANDARD_CREATOR_SHARE } from "@/lib/format";
+import { storePath } from "@/lib/store-links";
 import type { Product, Store } from "@/lib/types";
 import "./home.css";
 
@@ -12,7 +14,7 @@ const faqs = [
   ["Do I have to make the products myself?", "No. We can source and prepare properly licensed digital products that suit your audience. If you already have products of your own, we can talk about including them."],
   ["Will the store look like my brand?", "Yes. Your storefront is designed around your name, photos, colours and the way you talk to your audience."],
   ["What exactly do you handle?", "Store design and setup, checkout, digital delivery, customer emails, and the day-to-day running of the store."],
-  ["Is the split always 50/50?", "No. 50/50 is a starting point, not a rule. The split can be negotiated in your favour depending on your audience and the partnership."],
+  [`Is the split always ${STANDARD_CREATOR_SHARE}/${100 - STANDARD_CREATOR_SHARE}?`, `${STANDARD_CREATOR_SHARE}/${100 - STANDARD_CREATOR_SHARE} is our standard: you keep ${STANDARD_CREATOR_SHARE}% of every sale, and we keep ${100 - STANDARD_CREATOR_SHARE}% for building, stocking and running your store. It can be negotiated in your favour depending on your audience and the partnership.`],
   ["How much could I earn?", "It depends on real traffic, pricing, conversion and refunds. The calculator uses assumptions you set; it isn't a forecast or a typical result."],
   ["Do I need to promote my store?", "Yes. You introduce products to your audience in your own way, and disclose the partnership where the rules require it."]
 ];
@@ -44,7 +46,7 @@ const STEPS = [
 function StoreCard({ store, product }: { store: Store; product?: Product }) {
   return (
     <article className="b-store">
-      <Link className="b-store-photo" href={`/store/${store.slug}`} style={{ background: store.background }}>
+      <Link className="b-store-photo" href={storePath(store.slug)} style={{ background: store.background }}>
         {store.image && <img src={store.image} alt={store.name} loading="lazy" />}
         {store.label && <span className="b-store-tag">{store.label}</span>}
       </Link>
@@ -60,7 +62,7 @@ function StoreCard({ store, product }: { store: Store; product?: Product }) {
             </div>
           </Link>
         )}
-        <Link className="b-store-link" href={`/store/${store.slug}`}>
+        <Link className="b-store-link" href={storePath(store.slug)}>
           Visit store <span aria-hidden="true">→</span>
         </Link>
       </div>
@@ -103,7 +105,7 @@ export default async function HomePage() {
 
               <ul className="b-proof">
                 <li>$0 setup fee</li>
-                <li>Split agreed up front</li>
+                <li>You keep {STANDARD_CREATOR_SHARE}% of every sale</li>
                 <li>Your own earnings dashboard</li>
               </ul>
             </div>

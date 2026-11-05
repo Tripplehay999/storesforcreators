@@ -1,6 +1,8 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { after } from "next/server";
+import { WELCOME_PATH, sendWelcome } from "@/lib/onboarding";
 import { safeRedirectPath } from "@/lib/redirect";
 import { siteUrl } from "@/lib/site";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/server";
@@ -113,14 +115,20 @@ export async function signUp(_prev: AuthState, formData: FormData): Promise<Auth
     password,
     options: {
       data: { full_name: values.full_name, social_handle: values.social_handle },
-      emailRedirectTo: await callbackUrl("/dashboard?notice=welcome")
+      emailRedirectTo: await callbackUrl(WELCOME_PATH)
     }
   });
 
   if (error) return { values, error: friendly(error) };
 
-  // Email confirmation turned off in Supabase: the user is already signed in.
-  if (data.session) redirect("/dashboard?notice=welcome");
+  // Email confirmation turned off in Supabase: the user is already signed in, so welcome them now.
+  // (Otherwise the welcome email goes out when they open the confirmation link: see /auth/callback.)
+  if (data.session && data.user) {
+    const user = { id: data.user.id, email: values.email, name: values.full_name };
+    const site = await siteUrl();
+    after(() => sendWelcome(user, site).catch(err => console.error("[welcome] couldn't send:", err)));
+    redirect(WELCOME_PATH);
+  }
 
   return { sentTo: values.email, sentKind: "confirm" };
 }
@@ -133,7 +141,7 @@ export async function resendConfirmation(email: string): Promise<{ ok: boolean; 
   const { error } = await supabase.auth.resend({
     type: "signup",
     email,
-    options: { emailRedirectTo: await callbackUrl("/dashboard?notice=welcome") }
+    options: { emailRedirectTo: await callbackUrl(WELCOME_PATH) }
   });
 
   if (error) return { ok: false, message: friendly(error) };

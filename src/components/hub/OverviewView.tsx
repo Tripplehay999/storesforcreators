@@ -9,6 +9,7 @@ import BarChart from "./BarChart";
 import Icon from "./Icon";
 import IdeasCard from "./IdeasCard";
 import { AdminBanner, Empty, OrderRows, PageHeader, StatCard } from "./ui";
+import { storePath } from "@/lib/store-links";
 
 export type OverviewProps = {
   store: Store;
@@ -41,7 +42,7 @@ function Checklist({ store, products, balance, storeQuery }: {
     { done: Boolean(store.bio), label: "Write a short bio", href: "/dashboard/store" },
     { done: products.length > 0, label: "Add your first product", href: `/dashboard/products${storeQuery}` },
     { done: store.published, label: "Make your store public", href: "/dashboard/store" },
-    { done: (balance?.orderCount ?? 0) > 0, label: "Make your first sale", href: `/store/${store.slug}` }
+    { done: (balance?.orderCount ?? 0) > 0, label: "Make your first sale", href: storePath(store.slug) }
   ];
   const done = steps.filter(step => step.done).length;
 

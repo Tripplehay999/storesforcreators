@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState, useState, useTransition } from "react";
 import { cancelPayoutRequest, requestPayout, savePayoutSettings } from "@/app/dashboard/actions";
 import { money, shortDate } from "@/lib/format";
@@ -113,14 +114,10 @@ export function PayoutSettingsCard({ profile }: { profile: Profile }) {
           </label>
         )}
 
-        <label className="toggle full">
-          <span>
-            <strong>Email me when I make a sale</strong>
-            <small>Plus payout updates.</small>
-          </span>
-          <input name="email_notifications" type="checkbox" defaultChecked={profile.emailNotifications} />
-          <span className="switch" aria-hidden="true" />
-        </label>
+        <p className="field-hint full">
+          Sale and payout emails are {profile.emailNotifications ? "on" : "off"}. Change them in{" "}
+          <Link href="/dashboard/store#account">Storefront → Your account</Link>.
+        </p>
       </div>
 
       <div className="form-actions">

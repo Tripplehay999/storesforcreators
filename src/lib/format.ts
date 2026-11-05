@@ -1,5 +1,8 @@
 export const BRAND_NAME = "Stores for Creators";
 
+/** The standard split: the creator keeps this % of each sale, we keep the rest. Admins can change it per store. */
+export const STANDARD_CREATOR_SHARE = 70;
+
 export function money(value: number, decimals = 0) {
   return new Intl.NumberFormat("en-US", {
     style: "currency",

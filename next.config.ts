@@ -23,7 +23,12 @@ const nextConfig: NextConfig = {
     ];
   },
   async redirects() {
-    return [{ source: "/studio", destination: "/dashboard/products", permanent: false }];
+    return [
+      { source: "/studio", destination: "/dashboard/products", permanent: false },
+      // Stores moved from /store/jasmine to /jasmine. Links and QR codes already shared keep working,
+      // and their ?src= tracking comes along (Next.js passes the query through).
+      { source: "/store/:slug", destination: "/:slug", permanent: true }
+    ];
   }
 };
 

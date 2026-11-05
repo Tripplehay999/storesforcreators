@@ -1240,6 +1240,9 @@ html:has(.app) body {
 }
 
 .app .input-prefix input:not([type="checkbox"]) {
+  flex: 1;
+  /* The prefix is the whole domain now; let the box shrink beside it on phones. */
+  min-width: 0;
   min-height: 38px;
   border: 0 !important;
   border-radius: 0 !important;

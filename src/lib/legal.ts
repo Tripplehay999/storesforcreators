@@ -1,9 +1,11 @@
+import { CONTACT } from "./contact";
+
 // Details shown on the Privacy Policy and Terms pages. Change them here and both pages update.
 export const LEGAL = {
   company: "Stores for Creators",
   site: "storesforcreators.com",
-  email: "support@storesforcreators.com",
+  email: CONTACT.support,
   region: "Ontario, Canada",
   /** Bump this whenever the wording of either page changes. */
-  updated: "November 3, 2026"
+  updated: "November 5, 2026"
 };

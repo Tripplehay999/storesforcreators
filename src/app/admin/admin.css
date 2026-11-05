@@ -787,3 +787,91 @@ a.adm-crumb:hover {
 .adm textarea.adm-input {
   resize: vertical;
 }
+
+/* Emails page */
+
+.adm-footnote {
+  margin: 0;
+  padding: 12px 16px 14px;
+  border-top: 1px solid var(--border);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.adm-steps {
+  display: grid;
+  gap: 8px;
+}
+
+.adm-steps details {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+}
+
+.adm-steps summary {
+  padding: 11px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.adm-steps ol {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 4px 16px 14px 36px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.adm-steps ul {
+  display: grid;
+  gap: 4px;
+  margin: 6px 0 0;
+  padding-left: 18px;
+}
+
+.adm-steps strong {
+  color: var(--text);
+}
+
+.adm-steps a {
+  color: var(--accent);
+}
+
+/* Email signature maker (Admin → Emails) */
+
+.adm-signature {
+  display: grid;
+  gap: 14px;
+  justify-items: start;
+}
+
+.adm-signature .adm-form {
+  width: 100%;
+  max-width: 560px;
+}
+
+/* White, like Gmail's compose box, so the preview looks the way people will see it. */
+.adm-signature-paper {
+  width: 100%;
+  max-width: 560px;
+  padding: 18px 20px;
+  border-radius: 8px;
+  background: #ffffff;
+  overflow-x: auto;
+}
+
+.adm-logo-files {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-items: center;
+}
+
+.adm-logo-files img {
+  display: block;
+  border-radius: 10px;
+}

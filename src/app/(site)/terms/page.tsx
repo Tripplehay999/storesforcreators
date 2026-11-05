@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import LegalPage, { type LegalSection } from "@/components/LegalPage";
 import { DOWNLOAD_DAYS, MAX_DOWNLOADS } from "@/lib/downloads";
+import { STANDARD_CREATOR_SHARE } from "@/lib/format";
 import { LEGAL } from "@/lib/legal";
 
 export const metadata: Metadata = {
@@ -116,7 +117,10 @@ const sections: LegalSection[] = [
 
         <h3>Your share and payouts</h3>
         <ul>
-          <li>Your revenue share is agreed with you before your store launches.</li>
+          <li>
+            Our standard revenue share is {STANDARD_CREATOR_SHARE}% of each sale to you and {100 - STANDARD_CREATOR_SHARE}% to us. Your exact share is
+            agreed with you before your store launches, and you can see it in the creator hub.
+          </li>
           <li>Each completed sale adds your share to your balance, which you can see in the creator hub.</li>
           <li>If a sale is refunded, your share of that sale comes off your balance.</li>
           <li>
@@ -221,7 +225,7 @@ export default function TermsPage() {
         "We build and run online stores for creators, and sell their digital products.",
         "Payments are handled securely by Stripe, and digital products arrive straight after you pay.",
         "Sales are final, except when a file is faulty, missing or not as described, or you were charged twice.",
-        "Creators keep ownership of their content. Their revenue share is agreed before their store launches.",
+        `Creators keep ownership of their content, and ${STANDARD_CREATOR_SHARE}% of each sale as standard. Their exact share is agreed before their store launches.`,
         <>These terms follow the laws of {LEGAL.region}.</>
       ]}
       sections={sections}

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { CONTACT } from "@/lib/contact";
 import Brand from "./Brand";
 
 export default function SiteFooter() {
@@ -21,6 +22,12 @@ export default function SiteFooter() {
         <div className="footer-contact">
           <strong>Ready to talk?</strong>
           <button className="btn btn-outline-light" data-apply>Apply to partner</button>
+          <dl className="footer-emails">
+            <dt>Brand deals &amp; partnerships</dt>
+            <dd><a href={`mailto:${CONTACT.partnerships}`}>{CONTACT.partnerships}</a></dd>
+            <dt>Help with your store or an order</dt>
+            <dd><a href={`mailto:${CONTACT.support}`}>{CONTACT.support}</a></dd>
+          </dl>
         </div>
       </div>
 

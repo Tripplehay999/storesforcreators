@@ -5,9 +5,11 @@ import { useActionState, useEffect, useState, type CSSProperties } from "react";
 import { saveStore } from "@/app/dashboard/actions";
 import Icon from "@/components/hub/Icon";
 import { slugify } from "@/lib/catalog";
+import { MAIL_DOMAIN } from "@/lib/contact";
+import { isReservedSlug, storePath } from "@/lib/store-links";
+import type { Store } from "@/lib/types";
 import { toast } from "@/lib/ui";
 import { uploadImage } from "@/lib/upload";
-import type { Store } from "@/lib/types";
 
 // Keys match the form field names read by the saveStore action.
 type Values = {
@@ -125,13 +127,13 @@ export default function StoreForm({ store, userId, products = [] }: Props) {
             Store web address
             {store ? (
               <div className="input-prefix">
-                <span>/store/</span>
+                <span>{MAIL_DOMAIN}/</span>
                 <input value={store.slug} disabled />
               </div>
             ) : (
               <>
                 <div className="input-prefix">
-                  <span>/store/</span>
+                  <span>{MAIL_DOMAIN}/</span>
                   <input
                     {...field("slug")}
                     required
@@ -142,7 +144,11 @@ export default function StoreForm({ store, userId, products = [] }: Props) {
                     onChange={event => set("slug", slugify(event.target.value, 40))}
                   />
                 </div>
-                <span className="field-hint">Letters, numbers and dashes only, like your social handle. This can&apos;t be changed later.</span>
+                {isReservedSlug(values.slug) ? (
+                  <span className="field-hint" role="alert">&quot;{values.slug}&quot; is one of our own pages, so it can&apos;t be a store address. Try your name or handle.</span>
+                ) : (
+                  <span className="field-hint">Your store will be at {MAIL_DOMAIN}/{values.slug || "your-name"}. Letters, numbers and dashes only, like your social handle. This can&apos;t be changed later.</span>
+                )}
               </>
             )}
           </label>
@@ -305,7 +311,7 @@ export default function StoreForm({ store, userId, products = [] }: Props) {
         <div className="card-head">
           <h2>Live preview</h2>
           {store && (
-            <a className="link" href={`/store/${store.slug}`} target="_blank" rel="noreferrer">Open store</a>
+            <a className="link" href={storePath(store.slug)} target="_blank" rel="noreferrer">Open store</a>
           )}
         </div>
 

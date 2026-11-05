@@ -86,7 +86,8 @@ export const getSession = cache(async (): Promise<Session | null> => {
       suspended: Boolean(profile?.suspended),
       payoutMethod: profile?.payout_method ?? "",
       payoutDetails: profile?.payout_details ?? "",
-      emailNotifications: profile?.email_notifications !== false
+      emailNotifications: profile?.email_notifications !== false,
+      tipsEmails: profile?.tips_emails !== false
     },
     store: store ? rowToStore(store) : null
   };

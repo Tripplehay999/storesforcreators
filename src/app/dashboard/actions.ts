@@ -1,16 +1,19 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 import { normalizeProduct, productToRow, safeColor, safeImage, slugify } from "@/lib/catalog";
-import { getSession, getViewedStore, requireSession } from "@/lib/data";
+import { getSession, getViewedStore, requireSession, type Session } from "@/lib/data";
 import { adminEmails } from "@/lib/email";
 import { payoutRequestedEmail, storeLiveEmail } from "@/lib/email-templates";
 import { endOfDayInZone, money } from "@/lib/format";
 import { sendLater } from "@/lib/notify";
+import { sendOnce } from "@/lib/onboarding";
 import { isMissingSchema } from "@/lib/schema";
 import { siteUrl } from "@/lib/site";
 import { createClient } from "@/lib/supabase/server";
 import type { Product } from "@/lib/types";
+import { isReservedSlug, storePath, storeUrl } from "@/lib/store-links";
 
 export type FormState = { ok?: boolean; error?: string; message?: string };
 export type Result = { ok: true } | { ok: false; error: string };
@@ -21,7 +24,7 @@ function text(formData: FormData, name: string, max: number) {
 
 function revalidateStore(slug: string) {
   revalidatePath("/");
-  revalidatePath(`/store/${slug}`);
+  revalidatePath(storePath(slug));
   revalidatePath("/dashboard", "layout");
 }
 
@@ -30,19 +33,25 @@ function revalidateStore(slug: string) {
 export async function saveProfile(_prev: FormState, formData: FormData): Promise<FormState> {
   const session = await requireSession();
   const supabase = await createClient();
+  const update: Record<string, string | boolean> = {
+    full_name: text(formData, "full_name", 200),
+    social_handle: text(formData, "social_handle", 200),
+    email_notifications: formData.get("email_notifications") === "on",
+    tips_emails: formData.get("tips_emails") === "on"
+  };
 
-  const { error } = await supabase
-    .from("profiles")
-    .update({
-      full_name: text(formData, "full_name", 200),
-      social_handle: text(formData, "social_handle", 200)
-    })
-    .eq("id", session.profile.id);
+  let { error } = await supabase.from("profiles").update(update).eq("id", session.profile.id);
+
+  // Databases before migration 007 have no tips switch yet: save everything else.
+  if (error && isMissingSchema(error)) {
+    delete update.tips_emails;
+    ({ error } = await supabase.from("profiles").update(update).eq("id", session.profile.id));
+  }
 
   if (error) return { error: "We couldn't save your profile. Please try again." };
 
   revalidatePath("/dashboard", "layout");
-  return { ok: true, message: "Profile saved." };
+  return { ok: true, message: "Saved." };
 }
 
 function featuredId(value: FormDataEntryValue | null) {
@@ -78,12 +87,18 @@ export async function saveStore(_prev: FormState, formData: FormData): Promise<F
     if (error) return { error: "We couldn't save your store. Please try again." };
 
     revalidateStore(session.store.slug);
+
+    if (fields.published && !session.store.published) {
+      await announceStoreLive(session, session.store.slug, fields.name);
+      return { ok: true, message: "Saved. Your store is public now." };
+    }
     return { ok: true, message: "Store saved." };
   }
 
   const slug = slugify(formData.get("slug"), 40);
 
   if (slug.length < 2) return { error: "Choose a store URL with at least 2 letters or numbers." };
+  if (isReservedSlug(slug)) return { error: `"${slug}" is one of our own pages, so it can't be a store address. Try your name or handle.` };
 
   const { error } = await supabase
     .from("stores")
@@ -99,18 +114,27 @@ export async function saveStore(_prev: FormState, formData: FormData): Promise<F
 
   revalidateStore(slug);
 
-  if (fields.published) {
-    const site = await siteUrl();
-    sendLater({
-      to: session.profile.email,
-      ...storeLiveEmail({ name: session.profile.fullName, storeName: fields.name, storeUrl: `${site}/store/${slug}`, siteUrl: site })
-    });
-  }
+  if (fields.published) await announceStoreLive(session, slug, fields.name);
 
   return {
     ok: true,
     message: fields.published ? "Your store is live! Next, add your first product." : "Store created. Make it public when you're ready."
   };
+}
+
+/** "Your store is live" email, the first time a creator's store is public (once per person). */
+async function announceStoreLive(session: Session, slug: string, storeName: string) {
+  const site = await siteUrl();
+  const supabase = await createClient();
+  const { profile } = session;
+
+  after(() => sendOnce(profile.id, "store-live", async () => {
+    const { count } = await supabase.from("products").select("id", { count: "exact", head: true }).eq("store_slug", slug);
+    return {
+      to: profile.email,
+      ...storeLiveEmail({ name: profile.fullName, storeName, storeUrl: storeUrl(site, slug), siteUrl: site, hasProducts: (count ?? 0) > 0 })
+    };
+  }).catch(error => console.error("[store-live] couldn't send:", error)));
 }
 
 // ── Products (studio) ────────────────────────────────────────
@@ -305,7 +329,7 @@ export async function savePayoutSettings(_prev: FormState, formData: FormData): 
   const supabase = await createClient();
   const { error } = await supabase
     .from("profiles")
-    .update({ payout_method: method, payout_details: details, email_notifications: formData.get("email_notifications") === "on" })
+    .update({ payout_method: method, payout_details: details })
     .eq("id", session.profile.id);
 
   if (error) return { error: isMissingSchema(error) ? MIGRATION_HINT : "We couldn't save your payout details." };
